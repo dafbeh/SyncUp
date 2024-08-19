@@ -1,0 +1,18 @@
+body {
+    margin: 0;
+    padding: 0;
+    font-family: sans-serif;
+    background-color: #333333;
+}
+
+.topBar {
+    background-color: #212121;
+    padding: 1px;
+    margin: 0%;
+}
+
+.syncUp {
+    color: #FFFFFF;
+    font-family: sans-serif;
+    margin-left: 89px;
+}
