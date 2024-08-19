@@ -38,15 +38,6 @@ body {
     }
 }
 
-@keyframes enlarge {
-    from {
-        transform: scale(0.9);
-    }
-    to {
-        transform: scale(1);
-    }
-}
-
 /* Top Bar */
 .header{
     animation: fade-down 0.5s 0.4s backwards;
