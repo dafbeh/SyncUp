@@ -7,9 +7,35 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div class="topBar">
-        <h1 class="syncUp">SyncUp</h1>
+    <section class="header">
+        <div class="topBar">
+            <div class="leftGroup">
+                <img class="logo" alt="SyncUp" src="images/logo.png" draggable="false">
+                <hr class="spacer">
+                <h1 class="syncUp">SyncUp</h1>
+            </div>
+            <img class="account" alt="settings" src="images/account.png" draggable="false">
+        </div>
+        <hr class="horiztonalSpacer">
+    </section>
+
+    <section class="searchSection">
+        <div class="dropDown">
+            <img class="dropArrow" src="images/arrow.png" alt="dropDown" draggable="false">
+        </div>
+        <div class="searchContainer">
+            <input type="text" class="searchBar" placeholder="Search...">
+            <img class="searchIcon" src="images/search.png" alt="Search" draggable="false">
+        </div>
+    </section>
+
+    <div class="videoBox">
+        <h1 class="waiting">...</h1>
     </div>
+
+    <footer>
+
+    </footer>
 
     <script src="/socket.io/socket.io.js"></script>
     <script src="script.js"></script>
