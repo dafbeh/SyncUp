@@ -74,4 +74,20 @@ io.on('connection', (socket) => {
             console.log(`Attempt to broadcast to invalid room: ${room}`);
         }
     });
+
+    socket.on('pauseVideo', (data) => {
+        const { room } = data;
+        if (validRooms.has(room)) {
+            console.log(`Broadcasting pause event to room ${room}`);
+            io.to(room).emit('pauseVideo');
+        }
+    });
+
+    socket.on('playVideo', (data) => {
+        const { room } = data;
+        if (validRooms.has(room)) {
+            console.log(`Broadcasting play event to room ${room}`);
+            io.to(room).emit('playVideo');
+        }
+    });
 });

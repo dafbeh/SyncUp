@@ -1,5 +1,6 @@
 let socket = null;
 let roomId = null;
+let player;
 
 // On page load
 document.addEventListener('DOMContentLoaded', () => {
@@ -34,6 +35,18 @@ function connectToRoom(room) {
         }
 
         embedYoutube(textboxValue);
+    });
+
+    socket.on('pauseVideo', () => {
+        if (player && player.pauseVideo) {
+            player.pauseVideo();
+        }
+    });
+
+    socket.on('playVideo', () => {
+        if (player && player.playVideo) {
+            player.playVideo();
+        }
     });
 
     initializeSearch();
@@ -75,9 +88,13 @@ function createIFrame() {
 }
 
 function embedYoutube(textboxValue) {
-    var iframe = document.createElement('iframe');
-    var convertedUrl = convertUrl(textboxValue) + "?rel=0&autoplay=1";
+    const existingIframe = document.querySelector('.iframe iframe');
+    if (existingIframe) {
+        existingIframe.remove();
+    }
 
+    const iframe = document.createElement('iframe');
+    const convertedUrl = convertUrl(textboxValue) + "?enablejsapi=1&autoplay=1";
     console.log(convertedUrl);
 
     iframe.width = "100%";
@@ -88,6 +105,23 @@ function embedYoutube(textboxValue) {
     iframe.allowFullscreen = true;
 
     document.querySelector('.iframe').appendChild(iframe);
+
+    // Initialize the YouTube Player
+    iframe.onload = () => {
+        player = new YT.Player(iframe, {
+            events: {
+                'onStateChange': onPlayerStateChange
+            }
+        });
+    };
+}
+
+function onPlayerStateChange(event) {
+    if (event.data == YT.PlayerState.PAUSED) {
+        socket.emit('pauseVideo', { room: roomId });
+    } else if (event.data == YT.PlayerState.PLAYING) {
+        socket.emit('playVideo', { room: roomId });
+    }
 }
 
 function convertUrl(oldUrl) {
