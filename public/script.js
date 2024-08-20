@@ -12,12 +12,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-// Listeners
-const homePage = document.querySelector('.logo');
-homePage.addEventListener('click', () => {
-    window.location.href = '/';
-});
-
 function connectToRoom(room) {
     socket = io();
     socket.on('connect', () => {
@@ -39,13 +33,22 @@ function connectToRoom(room) {
 
     socket.on('pauseVideo', () => {
         if (player && player.pauseVideo) {
+            console.log("Pausing video");
             player.pauseVideo();
         }
     });
 
     socket.on('playVideo', () => {
         if (player && player.playVideo) {
+            console.log("Playing video");
             player.playVideo();
+        }
+    });
+
+    socket.on('seekTo', (time) => {
+        if (player) {
+            console.log(`Seeking video to time: ${time}`);
+            player.seekTo(time, true);
         }
     });
 
@@ -95,7 +98,7 @@ function embedYoutube(textboxValue) {
 
     const iframe = document.createElement('iframe');
     const convertedUrl = convertUrl(textboxValue) + "?enablejsapi=1&autoplay=1";
-    console.log(convertedUrl);
+    console.log("Embedding YouTube video with URL:", convertedUrl);
 
     iframe.width = "100%";
     iframe.height = "100%";
@@ -118,9 +121,15 @@ function embedYoutube(textboxValue) {
 
 function onPlayerStateChange(event) {
     if (event.data == YT.PlayerState.PAUSED) {
+        console.log("Video paused, emitting pause event");
         socket.emit('pauseVideo', { room: roomId });
     } else if (event.data == YT.PlayerState.PLAYING) {
+        console.log("Video playing, emitting play event");
         socket.emit('playVideo', { room: roomId });
+    } else if (event.data == YT.PlayerState.BUFFERING) {
+        const currentTime = player.getCurrentTime();
+        console.log(`Video buffering at time: ${currentTime}, emitting seek event`);
+        socket.emit('seekTo', { room: roomId, time: currentTime });
     }
 }
 

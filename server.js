@@ -90,4 +90,12 @@ io.on('connection', (socket) => {
             io.to(room).emit('playVideo');
         }
     });
+
+    socket.on('seekTo', (data) => {
+        const { room, time } = data;
+        if (validRooms.has(room)) {
+            console.log(`Broadcasting seekTo event to room ${room} at time ${time}`);
+            io.to(room).emit('seekTo', time);
+        }
+    }); 
 });
