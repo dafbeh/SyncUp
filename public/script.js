@@ -27,11 +27,17 @@ searchForm.addEventListener('submit', (e) => {
 const searchIcon = document.querySelector('.searchIcon');
 
 searchIcon.addEventListener('click', () => {
-    createIFrame();
+    if(searchForm.querySelector('.searchBar').value != "") {
+        createIFrame();
+    }
 });
 
 function createIFrame() {
     const textboxValue = searchForm.querySelector('.searchBar').value;
+
+    if(!searchForm.querySelector('.searchBar').value.includes("youtube.com")) {
+        return console.log("Invalid URL");
+    }
     
     socket.emit('videoUrl', textboxValue);
     
@@ -39,7 +45,6 @@ function createIFrame() {
     if (existingIframe) {
         existingIframe.remove();
     }
-    
     embedYoutube(textboxValue);
 }
 

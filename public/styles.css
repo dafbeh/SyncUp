@@ -75,11 +75,13 @@ body {
 
 .syncUp {
     color: #FFFFFF;
+    width: 153px;
+    height: 47px;
     font-family: sans-serif;
     font-size: 40px;
     padding: 0;
     margin: auto;
-    margin-top: 5px;
+    margin-top: 6px;
     margin-left: -20px;
 }
 
@@ -174,8 +176,8 @@ body {
     position: relative;
     background-color: #212121;
     color: white;
-    width: 1324px;
-    height: 743px;
+    width: 1280px;
+    height: 720px;
     font-family: sans-serif;
     display: flex;
     align-items: center;
