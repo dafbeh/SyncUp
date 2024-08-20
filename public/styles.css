@@ -57,6 +57,12 @@ body {
     gap: 25px;
 }
 
+.rightGroup {
+    display: flex;
+    align-items: center;
+    gap: 25px;
+}
+
 .logo {
     width: 62px;
     height: 62px;
@@ -83,6 +89,26 @@ body {
     margin: auto;
     margin-top: 6px;
     margin-left: -20px;
+}
+
+.newRoom {
+    background-color: #00ffbb;
+    border: none;
+    color: #0f0f0f;
+    padding: 5px 20px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 25px;
+    font-family: sans-serif;
+    font-weight: bold;
+    flex-shrink: 0;
+    gap: 10px;
+    transition: transform 0.3s ease
+}
+
+.newRoom:hover {
+    transform: scale(1.2);
 }
 
 .account {
