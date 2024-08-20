@@ -69,7 +69,8 @@ body {
     margin-left: 5px;
     margin-right: 5px;
     margin-top: 0px;
-    flex-shrink: 0; 
+    flex-shrink: 0;
+    cursor: pointer;
     transition-delay: 2s;
     transition-property: transform;
     transition-timing-function: ease-in-out;
@@ -94,6 +95,7 @@ body {
 .newRoom {
     background-color: #00ffbb;
     border: none;
+    border-radius: 10px;
     color: #0f0f0f;
     padding: 5px 20px;
     text-align: center;
@@ -104,6 +106,7 @@ body {
     font-weight: bold;
     flex-shrink: 0;
     gap: 10px;
+    cursor: pointer;
     transition: transform 0.3s ease
 }
 
@@ -117,6 +120,7 @@ body {
     margin-right: 10px;
     flex-shrink: 0;
     margin-top: 3px;
+    cursor: pointer;
     transition: transform 0.3s ease
 }
 
@@ -159,6 +163,7 @@ body {
     margin-right: auto;
     margin-top: auto;
     margin-bottom: auto;
+    cursor: pointer;
     transition: transform 0.3s ease
 }
 
@@ -179,6 +184,7 @@ body {
     width: 36px;
     height: 36px;
     margin-right: 10px;
+    cursor: pointer;
     transition: transform 0.3s ease
 }
 

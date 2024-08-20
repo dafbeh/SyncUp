@@ -1,6 +1,7 @@
 let socket = null;
 let roomId = null;
 
+// On page load
 document.addEventListener('DOMContentLoaded', () => {
     roomId = window.location.pathname.split('/')[1];
     if (roomId) {
@@ -8,6 +9,12 @@ document.addEventListener('DOMContentLoaded', () => {
     } else {
         initializeSearch();
     }
+});
+
+// Listeners
+const homePage = document.querySelector('.logo');
+homePage.addEventListener('click', () => {
+    window.location.href = '/';
 });
 
 function connectToRoom(room) {

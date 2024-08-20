@@ -35,7 +35,7 @@ app.get('/:room', (req, res) => {
 });
 
 io.on('connection', (socket) => {
-    console.log(`User connected: ${socket.id}`);
+    console.log(`${socket.id} connected`);
 
     socket.joinedRooms = [];
 
@@ -45,25 +45,21 @@ io.on('connection', (socket) => {
             socket.joinedRooms.push(room);
 
             roomUsersCount[room] = (roomUsersCount[room] || 0) + 1;
-            console.log(`${socket.id} joined room: ${room}. Users in room: ${roomUsersCount[room]}`);
         } else {
             socket.disconnect();
-            console.log(`Invalid room: ${room}, disconnecting ${socket.id}`);
         }
     });
 
     socket.on('disconnect', () => {
-        console.log(`User disconnected: ${socket.id}`);
+        console.log(`${socket.id} disconnected`);
 
         socket.joinedRooms.forEach((room) => {
             if (roomUsersCount[room]) {
                 roomUsersCount[room] -= 1;
-                console.log(`User left room: ${room}. Users remaining: ${roomUsersCount[room]}`);
 
                 if (roomUsersCount[room] <= 0) {
                     delete roomUsersCount[room];
                     validRooms.delete(room);
-                    console.log(`Room ${room} deleted because it is now empty.`);
                 }
             }
         });
