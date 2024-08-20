@@ -40,7 +40,7 @@ io.on('connection', (socket) => {
     socket.joinedRooms = [];
 
     socket.on('joinRoom', (room) => {
-        if (validRooms.has(room)) {
+        if(validRooms.has(room)) {
             socket.join(room);
             socket.joinedRooms.push(room);
 
@@ -68,17 +68,13 @@ io.on('connection', (socket) => {
     socket.on('videoUrl', (data) => {
         const { room, videoUrl } = data;
         if (validRooms.has(room)) {
-            console.log(`Broadcasting video URL to room ${room}: ${videoUrl}`);
             io.to(room).emit('videoUrl', videoUrl);
-        } else {
-            console.log(`Attempt to broadcast to invalid room: ${room}`);
         }
     });
 
     socket.on('pauseVideo', (data) => {
         const { room } = data;
         if (validRooms.has(room)) {
-            console.log(`Broadcasting pause event to room ${room}`);
             io.to(room).emit('pauseVideo');
         }
     });
@@ -86,7 +82,6 @@ io.on('connection', (socket) => {
     socket.on('playVideo', (data) => {
         const { room } = data;
         if (validRooms.has(room)) {
-            console.log(`Broadcasting play event to room ${room}`);
             io.to(room).emit('playVideo');
         }
     });
@@ -94,7 +89,6 @@ io.on('connection', (socket) => {
     socket.on('seekTo', (data) => {
         const { room, time } = data;
         if (validRooms.has(room)) {
-            console.log(`Broadcasting seekTo event to room ${room} at time ${time}`);
             io.to(room).emit('seekTo', time);
         }
     }); 

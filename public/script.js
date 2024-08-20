@@ -16,7 +16,6 @@ function connectToRoom(room) {
     socket = io();
     socket.on('connect', () => {
         console.log(`Connected to WebSocket server for room: ${room}`);
-
         socket.emit('joinRoom', room);
     });
 
@@ -33,21 +32,18 @@ function connectToRoom(room) {
 
     socket.on('pauseVideo', () => {
         if (player && player.pauseVideo) {
-            console.log("Pausing video");
             player.pauseVideo();
         }
     });
 
     socket.on('playVideo', () => {
         if (player && player.playVideo) {
-            console.log("Playing video");
             player.playVideo();
         }
     });
 
     socket.on('seekTo', (time) => {
         if (player) {
-            console.log(`Seeking video to time: ${time}`);
             player.seekTo(time, true);
         }
     });
@@ -123,9 +119,11 @@ function onPlayerStateChange(event) {
     if (event.data == YT.PlayerState.PAUSED) {
         console.log("Video paused, emitting pause event");
         socket.emit('pauseVideo', { room: roomId });
+
     } else if (event.data == YT.PlayerState.PLAYING) {
         console.log("Video playing, emitting play event");
         socket.emit('playVideo', { room: roomId });
+
     } else if (event.data == YT.PlayerState.BUFFERING) {
         const currentTime = player.getCurrentTime();
         console.log(`Video buffering at time: ${currentTime}, emitting seek event`);
