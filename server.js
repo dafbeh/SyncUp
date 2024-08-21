@@ -9,7 +9,8 @@ const path = require('path');
 const PORT = process.env.PORT || 3000;
 
 const validRooms = new Set();
-const roomUsersCount = {};
+const roomLeader = {};
+const roomUserList = {};
 
 app.use(express.static('public'));
 
@@ -20,7 +21,7 @@ server.listen(PORT, () => {
 app.get('/new-room', (req, res) => {
     const roomId = uuidv4();
     validRooms.add(roomId);
-    roomUsersCount[roomId] = 0;
+    roomUserList[roomId] = [];
     res.redirect(`/${roomId}`);
 });
 
@@ -44,7 +45,11 @@ io.on('connection', (socket) => {
             socket.join(room);
             socket.joinedRooms.push(room);
 
-            roomUsersCount[room] = (roomUsersCount[room] || 0) + 1;
+            if (roomUserList[room].length === 0) {
+                roomLeader[room] = socket.id;
+            }
+
+            roomUserList[room].push(socket.id);
         } else {
             socket.disconnect();
         }
@@ -54,12 +59,20 @@ io.on('connection', (socket) => {
         console.log(`${socket.id} disconnected`);
 
         socket.joinedRooms.forEach((room) => {
-            if (roomUsersCount[room]) {
-                roomUsersCount[room] -= 1;
+            const userIndex = roomUserList[room].indexOf(socket.id);
+            if (userIndex !== -1) {
+                roomUserList[room].splice(userIndex, 1);
+            }
 
-                if (roomUsersCount[room] <= 0) {
-                    delete roomUsersCount[room];
-                    validRooms.delete(room);
+            if (roomLeader[room] === socket.id) {
+                roomLeader[room] = roomUserList[room][0];
+            }
+
+            if (roomLeader[room] === socket.id) {
+                if (roomUserList[room].length > 0) {
+                    roomLeader[room] = roomUserList[room][0];
+                } else {
+                    delete roomLeader[room];
                 }
             }
         });
@@ -91,5 +104,5 @@ io.on('connection', (socket) => {
         if (validRooms.has(room)) {
             io.to(room).emit('seekTo', time);
         }
-    }); 
+    });
 });
