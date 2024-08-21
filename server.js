@@ -109,4 +109,11 @@ io.on('connection', (socket) => {
             io.to(room).emit('seekTo', time);
         }
     });
+
+    socket.on('getRoomLeader', (room) => {
+        if (validRooms.has(room)) {
+            const leader = roomLeader[room];
+            socket.emit('roomLeader', leader);
+        }
+    });
 });

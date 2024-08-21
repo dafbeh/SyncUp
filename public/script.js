@@ -30,6 +30,11 @@ function onPlayerStateChange(event) {
     }
 }
 
+
+document.querySelector('.getInfo').addEventListener('click', () => {
+    getRoomLeader();
+});
+
 // Connect to the WebSocket server
 function connectToRoom(room) {
     socket = io();
@@ -69,7 +74,14 @@ function connectToRoom(room) {
         }
     });
 
+    socket.on('roomLeader', (leader) => {
+            console.log(leader);
+    });
     initializeSearch();
+}
+
+function getRoomLeader() {
+    socket.emit('getRoomLeader', roomId);
 }
 
 // Get URL from the search bar and create an iframe
