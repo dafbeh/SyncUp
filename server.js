@@ -6,18 +6,22 @@ const server = http.createServer(app);
 const io = require('socket.io')(server);
 const path = require('path');
 
+// Configure the server
 const PORT = process.env.PORT || 3000;
 
+// Store the information about the rooms
 const validRooms = new Set();
 const roomLeader = {};
 const roomUserList = {};
 
 app.use(express.static('public'));
 
+// Start the server
 server.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
+    console.log("Server is running on port " + PORT);
 });
 
+// Routes 
 app.get('/new-room', (req, res) => {
     const roomId = uuidv4();
     validRooms.add(roomId);
@@ -25,6 +29,7 @@ app.get('/new-room', (req, res) => {
     res.redirect(`/${roomId}`);
 });
 
+// Route to join a room
 app.get('/:room', (req, res) => {
     const roomId = req.params.room;
 
@@ -35,9 +40,8 @@ app.get('/:room', (req, res) => {
     }
 });
 
+// WebSocket server connection
 io.on('connection', (socket) => {
-    console.log(`${socket.id} connected`);
-
     socket.joinedRooms = [];
 
     socket.on('joinRoom', (room) => {
@@ -50,14 +54,13 @@ io.on('connection', (socket) => {
             }
 
             roomUserList[room].push(socket.id);
+            console.log(socket.id + " connected to " + room);
         } else {
             socket.disconnect();
         }
     });
 
     socket.on('disconnect', () => {
-        console.log(`${socket.id} disconnected`);
-
         socket.joinedRooms.forEach((room) => {
             const userIndex = roomUserList[room].indexOf(socket.id);
             if (userIndex !== -1) {
@@ -75,6 +78,7 @@ io.on('connection', (socket) => {
                     delete roomLeader[room];
                 }
             }
+            console.log(socket.id + " disconnected from " + room);
         });
     });
 

@@ -12,15 +12,35 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
+// Listeners
+// Event listener for the YouTube player state change
+function onPlayerStateChange(event) {
+    if (event.data == YT.PlayerState.PAUSED) {
+        console.log("Video paused, emitting pause event");
+        socket.emit('pauseVideo', { room: roomId });
+
+    } else if (event.data == YT.PlayerState.PLAYING) {
+        console.log("Video playing, emitting play event");
+        socket.emit('playVideo', { room: roomId });
+
+    } else if (event.data == YT.PlayerState.BUFFERING) {
+        const currentTime = player.getCurrentTime();
+        console.log("Video buffering at time: " + currentTime + ", emitting seek event");
+        socket.emit('seekTo', { room: roomId, time: currentTime });
+    }
+}
+
+// Connect to the WebSocket server
 function connectToRoom(room) {
     socket = io();
     socket.on('connect', () => {
-        console.log(`Connected to WebSocket server for room: ${room}`);
+        console.log("Connected to WebSocket server for room: " + room);
         socket.emit('joinRoom', room);
     });
 
+    // Send the URL to the server
     socket.on('videoUrl', (textboxValue) => {
-        console.log("Received video URL from server:", textboxValue);
+        console.log("Received video URL from server: ", textboxValue);
 
         const existingIframe = document.querySelector('.iframe iframe');
         if (existingIframe) {
@@ -30,6 +50,7 @@ function connectToRoom(room) {
         embedYoutube(textboxValue);
     });
 
+    // Actions / Events to be emitted to the server
     socket.on('pauseVideo', () => {
         if (player && player.pauseVideo) {
             player.pauseVideo();
@@ -51,6 +72,7 @@ function connectToRoom(room) {
     initializeSearch();
 }
 
+// Get URL from the search bar and create an iframe
 function initializeSearch() {
     const searchForm = document.querySelector('#searchForm');
 
@@ -68,6 +90,7 @@ function initializeSearch() {
     });
 }
 
+// Create the iframe element and embed the YouTube video
 function createIFrame() {
     const textboxValue = document.querySelector('.searchBar').value;
 
@@ -86,6 +109,7 @@ function createIFrame() {
     embedYoutube(textboxValue);
 }
 
+// Embed the YouTube video in the iframe
 function embedYoutube(textboxValue) {
     const existingIframe = document.querySelector('.iframe iframe');
     if (existingIframe) {
@@ -115,24 +139,9 @@ function embedYoutube(textboxValue) {
     };
 }
 
-function onPlayerStateChange(event) {
-    if (event.data == YT.PlayerState.PAUSED) {
-        console.log("Video paused, emitting pause event");
-        socket.emit('pauseVideo', { room: roomId });
-
-    } else if (event.data == YT.PlayerState.PLAYING) {
-        console.log("Video playing, emitting play event");
-        socket.emit('playVideo', { room: roomId });
-
-    } else if (event.data == YT.PlayerState.BUFFERING) {
-        const currentTime = player.getCurrentTime();
-        console.log(`Video buffering at time: ${currentTime}, emitting seek event`);
-        socket.emit('seekTo', { room: roomId, time: currentTime });
-    }
-}
-
+// Convert the YouTube URL to an embeddable URL
 function convertUrl(oldUrl) {
     const url = new URL(oldUrl);
     const newUrl = url.searchParams.get("v");
-    return `https://www.youtube.com/embed/${newUrl}`;
+    return "https://www.youtube.com/embed/" + newUrl;
 }
