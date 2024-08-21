@@ -32,7 +32,9 @@ function onPlayerStateChange(event) {
 
 
 document.querySelector('.getInfo').addEventListener('click', () => {
-    getRoomLeader();
+    if(roomId) {
+        socket.emit('getRoomLeader', roomId);
+    }
 });
 
 // Connect to the WebSocket server
@@ -78,10 +80,6 @@ function connectToRoom(room) {
             console.log(leader);
     });
     initializeSearch();
-}
-
-function getRoomLeader() {
-    socket.emit('getRoomLeader', roomId);
 }
 
 // Get URL from the search bar and create an iframe

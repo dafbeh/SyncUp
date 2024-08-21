@@ -1,0 +1,8 @@
+What succeeded:
+    - Check Git Pushes
+
+What Failed:
+    - Added a refresh button so a new user could join and press the refresh button to sync,
+        I did this by keeping a timer that updated on every action, (seeking, pause, play, start).
+        This however didn't work as if an action was done 30 seconds ago then it would sync them to 30 seconds back.
+    -
