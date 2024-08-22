@@ -136,15 +136,28 @@ body {
     border: none;
 }
 
-/* Search Bar */
+/* Search Section */
 .searchSection {
     display: flex;
-    justify-content: center;
     align-items: center;
+    justify-content: center;
     margin-top: 75px;
     margin-left: auto;
     margin-right: auto;
+    width: 35vw;
+    max-width: 800px;
+    padding: 0 20px;
+    box-sizing: border-box;
     animation: fade-up 0.5s 0.4s backwards;
+}
+
+.searchContainer {
+    display: flex;
+    flex-grow: 1;
+    align-items: center;
+    background-color: #EBD3F8;
+    height: 58px;
+    border-radius: 0 15px 15px 0;
 }
 
 .dropDown {
@@ -154,30 +167,19 @@ body {
     border-radius: 15px 0 0 15px;
     display: flex;
     align-items: center;
+    flex-shrink: 0; /* Prevent shrinking */
 }
 
 .dropArrow {
-    width: 36px;
-    height: 21px;
-    margin-left: auto;
-    margin-right: auto;
-    margin-top: auto;
-    margin-bottom: auto;
+    width: 55%;
+    height: 40%;
+    margin: auto;
     cursor: pointer;
-    transition: transform 0.3s ease
+    transition: transform 0.3s ease;
 }
 
 .dropArrow:hover {
     transform: scale(1.2);
-}
-
-.searchContainer {
-    display: flex;
-    align-items: center;
-    background-color: #EBD3F8;
-    width: 770px;
-    height: 58px;
-    border-radius: 0 15px 15px 0;
 }
 
 .searchIcon {
@@ -185,7 +187,8 @@ body {
     height: 36px;
     margin-right: 10px;
     cursor: pointer;
-    transition: transform 0.3s ease
+    transition: transform 0.3s ease;
+    flex-shrink: 0;
 }
 
 .searchIcon:hover {
@@ -208,13 +211,15 @@ body {
     position: relative;
     background-color: #212121;
     color: white;
-    width: 1280px;
-    height: 720px;
+    width: 50%;
+    max-width: 1280px;
+    min-width: 400px;
+    aspect-ratio: 16 / 9;
     font-family: sans-serif;
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-top: 55px;
+    margin-top: 20px;
     margin-left: auto;
     margin-right: auto;
     animation: fade-up 0.5s 0.4s backwards;
