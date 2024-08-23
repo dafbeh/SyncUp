@@ -119,8 +119,9 @@ function embedYoutube(textboxValue) {
     const existingIframe = document.querySelector('.iframe iframe');
     const videoTitle = document.querySelector('.videoTitleText');
 
-    if (!textboxValue.includes("youtube.com") || !textboxValue.includes("youtu.be")) {
+    if (!textboxValue.includes("youtube.com") && !textboxValue.includes("youtu.be")) {
         console.log("Invalid YouTube URL");
+        videoTitle.textContent = "";
         return;
     }
 
@@ -155,6 +156,8 @@ function embedYoutube(textboxValue) {
 
 // Convert the YouTube URL to an embeddable URL
 function convertUrl(oldUrl) {
+    const url = new URL(oldUrl);
+
     if (oldUrl.includes("youtube.com")) {
         const videoID = url.searchParams.get("v");
         return "https://www.youtube.com/embed/" + videoID;
