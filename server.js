@@ -36,7 +36,7 @@ app.get('/:room', (req, res) => {
     const roomId = req.params.room;
 
     if (validRooms.has(roomId)) {
-        res.sendFile(path.join(__dirname, 'public', 'index.html'));
+        res.sendFile(path.join(__dirname, 'public', 'room.html'));
     } else {
         res.status(404).send('Room not found');
     }
