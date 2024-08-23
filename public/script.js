@@ -2,41 +2,6 @@ let socket = null;
 let roomId = null;
 let player;
 
-// On page load
-document.addEventListener('DOMContentLoaded', () => {
-    roomId = window.location.pathname.split('/')[1];
-    if (roomId) {
-        connectToRoom(roomId);
-    } else {
-        initializeSearch();
-    }
-});
-
-// Listeners
-// Event listener for the YouTube player state change
-function onPlayerStateChange(event) {
-    if (event.data == YT.PlayerState.PAUSED) {
-        console.log("Video paused, emitting pause event");
-        socket.emit('pauseVideo', { room: roomId });
-
-    } else if (event.data == YT.PlayerState.PLAYING) {
-        console.log("Video playing, emitting play event");
-        socket.emit('playVideo', { room: roomId });
-
-    } else if (event.data == YT.PlayerState.BUFFERING) {
-        const currentTime = player.getCurrentTime();
-        console.log("Video buffering at time: " + currentTime + ", emitting seek event");
-        socket.emit('seekTo', { room: roomId, time: currentTime });
-    }
-}
-
-
-document.querySelector('.getInfo').addEventListener('click', () => {
-    if(roomId) {
-        socket.emit('getRoomLeader', roomId);
-    }
-});
-
 // Connect to the WebSocket server
 function connectToRoom(room) {
     socket = io();
@@ -82,6 +47,40 @@ function connectToRoom(room) {
     initializeSearch();
 }
 
+// On page load
+document.addEventListener('DOMContentLoaded', () => {
+    roomId = window.location.pathname.split('/')[1];
+    if (roomId) {
+        connectToRoom(roomId);
+    } else {
+        initializeSearch();
+    }
+});
+
+// Listeners
+// Event listener for the YouTube player state change
+function onPlayerStateChange(event) {
+    if (event.data == YT.PlayerState.PAUSED) {
+        console.log("Video paused, emitting pause event");
+        socket.emit('pauseVideo', { room: roomId });
+
+    } else if (event.data == YT.PlayerState.PLAYING) {
+        console.log("Video playing, emitting play event");
+        socket.emit('playVideo', { room: roomId });
+
+    } else if (event.data == YT.PlayerState.BUFFERING) {
+        const currentTime = player.getCurrentTime();
+        console.log("Video buffering at time: " + currentTime + ", emitting seek event");
+        socket.emit('seekTo', { room: roomId, time: currentTime });
+    }
+}
+
+document.querySelector('.getInfo').addEventListener('click', () => {
+    if(roomId) {
+        socket.emit('getRoomLeader', roomId);
+    }
+});
+
 // Get URL from the search bar and create an iframe
 function initializeSearch() {
     const searchForm = document.querySelector('#searchForm');
@@ -104,10 +103,6 @@ function initializeSearch() {
 function createIFrame() {
     const textboxValue = document.querySelector('.searchBar').value;
 
-    if (!textboxValue.includes("youtube.com")) {
-        return console.log("Invalid URL");
-    }
-
     if (socket) {
         socket.emit('videoUrl', { room: roomId, videoUrl: textboxValue });
     }
@@ -123,6 +118,11 @@ function createIFrame() {
 function embedYoutube(textboxValue) {
     const existingIframe = document.querySelector('.iframe iframe');
     const videoTitle = document.querySelector('.videoTitleText');
+
+    if (!textboxValue.includes("youtube.com") || !textboxValue.includes("youtu.be")) {
+        console.log("Invalid YouTube URL");
+        return;
+    }
 
     if (existingIframe) {
         existingIframe.remove();
@@ -145,7 +145,6 @@ function embedYoutube(textboxValue) {
     player = new YT.Player(iframe, {
         events: {
             'onReady': function(event) {
-                // Now the player is ready, we can safely get the video title
                 const title = event.target.getVideoData().title;
                 videoTitle.textContent = title;
             },
@@ -154,10 +153,15 @@ function embedYoutube(textboxValue) {
     });
 }
 
-
 // Convert the YouTube URL to an embeddable URL
 function convertUrl(oldUrl) {
-    const url = new URL(oldUrl);
-    const newUrl = url.searchParams.get("v");
-    return "https://www.youtube.com/embed/" + newUrl;
+    if (oldUrl.includes("youtube.com")) {
+        const videoID = url.searchParams.get("v");
+        return "https://www.youtube.com/embed/" + videoID;
+    }
+
+    if (url.hostname === "youtu.be") {
+        const videoID = url.pathname.split('/')[1];
+        return "https://www.youtube.com/embed/" + videoID;
+    }
 }
