@@ -116,12 +116,14 @@ function createIFrame() {
     if (existingIframe) {
         existingIframe.remove();
     }
-    embedYoutube(textboxValue);
+    embedYoutube(textboxValue); 
 }
 
 // Embed the YouTube video in the iframe
 function embedYoutube(textboxValue) {
     const existingIframe = document.querySelector('.iframe iframe');
+    const videoTitle = document.querySelector('.videoTitleText');
+
     if (existingIframe) {
         existingIframe.remove();
     }
@@ -140,14 +142,18 @@ function embedYoutube(textboxValue) {
     document.querySelector('.iframe').appendChild(iframe);
 
     // Initialize the YouTube Player
-    iframe.onload = () => {
-        player = new YT.Player(iframe, {
-            events: {
-                'onStateChange': onPlayerStateChange
-            }
-        });
-    };
+    player = new YT.Player(iframe, {
+        events: {
+            'onReady': function(event) {
+                // Now the player is ready, we can safely get the video title
+                const title = event.target.getVideoData().title;
+                videoTitle.textContent = title;
+            },
+            'onStateChange': onPlayerStateChange
+        }
+    });
 }
+
 
 // Convert the YouTube URL to an embeddable URL
 function convertUrl(oldUrl) {
