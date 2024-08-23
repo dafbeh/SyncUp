@@ -160,7 +160,7 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-top: 75px;
+    margin-top: 25px;
     margin-left: auto;
     margin-right: auto;
     width: 100%;
@@ -172,7 +172,7 @@ body {
 .searchContainer {
     display: flex;
     align-items: center;
-    background-color: #EBD3F8;
+    background-color: white;
     height: 58px;
     border-radius: 0 15px 15px 0;
     width: 30%;
