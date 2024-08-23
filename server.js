@@ -27,6 +27,7 @@ app.get('/new-room', (req, res) => {
     const roomId = uuidv4();
     validRooms.add(roomId);
     roomUserList[roomId] = [];
+    roomModerators[roomId] = [];
     res.redirect(`/${roomId}`);
 });
 
@@ -69,14 +70,18 @@ io.on('connection', (socket) => {
             }
 
             if (roomLeader[room] === socket.id) {
-                roomLeader[room] = roomUserList[room][0];
-            }
-
-            if (roomLeader[room] === socket.id) {
                 if (roomUserList[room].length > 0) {
                     roomLeader[room] = roomUserList[room][0];
                 } else {
                     delete roomLeader[room];
+                }
+            }
+
+            const moderatorIndex = roomModerators[room].indexOf(socket.id);
+            if (moderatorIndex !== -1) {
+                roomModerators[room].splice(moderatorIndex, 1);
+                if (roomModerators[room].length === 0) {
+                    delete roomModerators[room];
                 }
             }
             console.log(socket.id + " disconnected from " + room);
@@ -115,6 +120,23 @@ io.on('connection', (socket) => {
         if (validRooms.has(room)) {
             const leader = roomLeader[room];
             socket.emit('roomLeader', leader);
+        }
+    });
+
+    socket.on('getModerators', (room) => {
+        if (validRooms.has(room)) {
+            const mods = roomModerators[room] || [];
+            socket.emit('getModerators', mods);
+        }
+    });
+
+    socket.on('setModerator', (room) => {
+        if (validRooms.has(room)) {
+            if (!roomModerators[room]) {
+                roomModerators[room] = [];
+            }
+            roomModerators[room].push(socket.id);
+            socket.emit('setModerator', socket.id);
         }
     });
 });

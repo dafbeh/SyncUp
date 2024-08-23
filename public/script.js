@@ -44,7 +44,14 @@ function connectToRoom(room) {
     socket.on('roomLeader', (leader) => {
             console.log(leader);
     });
-    initializeSearch();
+
+    socket.on('getModerators', (mods) => {
+        console.log(mods);
+    });
+
+    socket.on('setModerator', (mod) => {
+        console.log(mod);
+    });
 }
 
 // On page load
@@ -186,4 +193,13 @@ function convertUrl(oldUrl) {
     }
 
     return "https://www.youtube.com/embed/" + videoID + "?enablejsapi=1&autoplay=1";
+}
+
+/* Permission Functions */
+function setModerator(socketID) {
+    socket.emit('setModerator', socketID);
+}
+
+function getModerators(room) {
+    socket.emit('getModerators', room);
 }
