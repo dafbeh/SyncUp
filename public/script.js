@@ -49,13 +49,18 @@ function connectToRoom(room) {
 
 // On page load
 document.addEventListener('DOMContentLoaded', () => {
-    roomId = window.location.pathname.split('/')[1];
+    const roomId = window.location.pathname.split('/')[1];
+    const newRoom = document.querySelector('.newRoom');
+
     if (roomId) {
         connectToRoom(roomId);
+        newRoom.style.display = 'none';
     } else {
         initializeSearch();
+        newRoom.style.display = 'inline-block';
     }
 });
+
 
 // Listeners
 // Event listener for the YouTube player state change
@@ -121,16 +126,25 @@ function embedYoutube(textboxValue) {
 
     if (!textboxValue.includes("youtube.com") && !textboxValue.includes("youtu.be")) {
         console.log("Invalid YouTube URL");
+        const waitingElement = document.querySelector('.waiting');
+        
+        waitingElement.textContent = "Invalid URL";
+        waitingElement.style.color = "red";
         videoTitle.textContent = "";
+    
+        setTimeout(() => {
+            waitingElement.textContent = "...";
+            waitingElement.style.color = "white";
+        }, 3000);
         return;
     }
-
+    
     if (existingIframe) {
         existingIframe.remove();
     }
 
     const iframe = document.createElement('iframe');
-    const convertedUrl = convertUrl(textboxValue) + "?enablejsapi=1&autoplay=1";
+    const convertedUrl = convertUrl(textboxValue);
     console.log("Embedding YouTube video with URL:", convertedUrl);
 
     iframe.width = "100%";
@@ -157,14 +171,19 @@ function embedYoutube(textboxValue) {
 // Convert the YouTube URL to an embeddable URL
 function convertUrl(oldUrl) {
     const url = new URL(oldUrl);
+    let videoID;
 
-    if (oldUrl.includes("youtube.com")) {
-        const videoID = url.searchParams.get("v");
-        return "https://www.youtube.com/embed/" + videoID;
+    if (url.hostname.includes("youtube.com") && url.searchParams.has("v")) {
+        videoID = url.searchParams.get("v");
     }
 
-    if (url.hostname === "youtu.be") {
-        const videoID = url.pathname.split('/')[1];
-        return "https://www.youtube.com/embed/" + videoID;
+    else if (url.hostname === "youtu.be") {
+        videoID = url.pathname.split('/')[1];
     }
+
+    else if (url.pathname.startsWith("/shorts/")) {
+        videoID = url.pathname.split('/')[2] || url.pathname.split('/')[1];
+    }
+
+    return "https://www.youtube.com/embed/" + videoID + "?enablejsapi=1&autoplay=1";
 }

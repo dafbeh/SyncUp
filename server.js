@@ -12,6 +12,7 @@ const PORT = process.env.PORT || 3000;
 // Store the information about the rooms
 const validRooms = new Set();
 const roomLeader = {};
+const roomModerators = {};
 const roomUserList = {};
 
 app.use(express.static('public'));
