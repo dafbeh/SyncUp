@@ -52,12 +52,13 @@ function connectToRoom(room) {
     socket.on('setModerator', (mod) => {
         console.log(mod);
     });
+
     initializeSearch();
 }
 
 // On page load
 document.addEventListener('DOMContentLoaded', () => {
-    const roomId = window.location.pathname.split('/')[1];
+    roomId = window.location.pathname.split('/')[1];
     const newRoom = document.querySelector('.newRoom');
 
     if (roomId) {
@@ -87,12 +88,6 @@ function onPlayerStateChange(event) {
         socket.emit('seekTo', { room: roomId, time: currentTime });
     }
 }
-
-document.querySelector('.getInfo').addEventListener('click', () => {
-    if(roomId) {
-        socket.emit('getRoomLeader', roomId);
-    }
-});
 
 // Get URL from the search bar and create an iframe
 function initializeSearch() {
