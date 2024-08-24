@@ -52,6 +52,7 @@ function connectToRoom(room) {
     socket.on('setModerator', (mod) => {
         console.log(mod);
     });
+    initializeSearch();
 }
 
 // On page load
