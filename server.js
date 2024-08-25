@@ -11,6 +11,7 @@ const PORT = process.env.PORT || 3000;
 
 // Store the information about the rooms
 const validRooms = new Set();
+const roomQueue = {};
 const roomLeader = {};
 const roomModerators = {};
 const roomUserList = {};
@@ -28,6 +29,7 @@ app.get('/new-room', (req, res) => {
     validRooms.add(roomId);
     roomUserList[roomId] = [];
     roomModerators[roomId] = [];
+    roomQueue[roomId] = [];
     res.redirect(`/${roomId}`);
 });
 
@@ -116,6 +118,22 @@ io.on('connection', (socket) => {
         }
     });
 
+    /* Getters and Setters */
+    socket.on('addToQueue', (data) => {
+        const { room, videoId } = data;
+        if (validRooms.has(room)) {
+            roomQueue[room].push(videoId);
+            io.to(room).emit('addToQueue', roomQueue[room]);
+        }
+    });
+
+    socket.on('getQueue', (room) => {
+        if (validRooms.has(room)) {
+            socket.emit('queueData', roomQueue[room] || []);
+            roomQueue[room].shift();
+        }
+    });
+    
     socket.on('getRoomLeader', (room) => {
         if (validRooms.has(room)) {
             const leader = roomLeader[room];

@@ -1,6 +1,21 @@
 let socket = null;
 let roomId = null;
 let player;
+let videoLoaded = false;
+
+// On page load
+document.addEventListener('DOMContentLoaded', () => {
+    roomId = window.location.pathname.split('/')[1];
+    const newRoom = document.querySelector('.newRoom');
+
+    if (roomId) {
+        connectToRoom(roomId);
+        newRoom.style.display = 'none';
+    } else {
+        initializeSearch();
+        newRoom.style.display = 'inline-block';
+    }
+});
 
 // Connect to the WebSocket server
 function connectToRoom(room) {
@@ -12,14 +27,21 @@ function connectToRoom(room) {
 
     // Send the URL to the server
     socket.on('videoUrl', (textboxValue) => {
-        console.log("Received video URL from server: ", textboxValue);
+        // console.log("Received video URL from server: ", textboxValue);
 
         const existingIframe = document.querySelector('.iframe iframe');
         if (existingIframe) {
             existingIframe.remove();
         }
-
         embedYoutube(textboxValue);
+    });
+
+    socket.on('addToQueue', (queue) => {
+            console.log("Added to queue: ", queue);
+    });
+
+    socket.on('queueData', (queue) => {
+        console.log('Queue data:', queue);
     });
 
     // Actions / Events to be emitted to the server
@@ -52,46 +74,40 @@ function connectToRoom(room) {
     socket.on('setModerator', (mod) => {
         console.log(mod);
     });
+
+    initializeSearch()
 }
-
-// On page load
-document.addEventListener('DOMContentLoaded', () => {
-    const roomId = window.location.pathname.split('/')[1];
-    const newRoom = document.querySelector('.newRoom');
-
-    if (roomId) {
-        connectToRoom(roomId);
-        newRoom.style.display = 'none';
-    } else {
-        initializeSearch();
-        newRoom.style.display = 'inline-block';
-    }
-});
-
 
 // Listeners
 // Event listener for the YouTube player state change
 function onPlayerStateChange(event) {
-    if (event.data == YT.PlayerState.PAUSED) {
-        console.log("Video paused, emitting pause event");
-        socket.emit('pauseVideo', { room: roomId });
+    if(roomId) {
+        if (event.data == YT.PlayerState.ENDED) {
+            console.log("Video ended, playing next video in queue");
+            getQueue(roomId, (queue) => {
+                if (queue.length === 0) {
+                    videoLoaded = false;
+                } else {
+                    console.log("Playing next video in queue " + queue[0]);
+                    createIFrame(queue[0]);
+                }
+            });
 
-    } else if (event.data == YT.PlayerState.PLAYING) {
-        console.log("Video playing, emitting play event");
-        socket.emit('playVideo', { room: roomId });
+        } else if (event.data == YT.PlayerState.PAUSED) {
+            console.log("Video paused, emitting pause event");
+            socket.emit('pauseVideo', { room: roomId });
 
-    } else if (event.data == YT.PlayerState.BUFFERING) {
-        const currentTime = player.getCurrentTime();
-        console.log("Video buffering at time: " + currentTime + ", emitting seek event");
-        socket.emit('seekTo', { room: roomId, time: currentTime });
+        } else if (event.data == YT.PlayerState.PLAYING) {
+            console.log("Video playing, emitting play event");
+            socket.emit('playVideo', { room: roomId });
+
+        } else if (event.data == YT.PlayerState.BUFFERING) {
+            const currentTime = player.getCurrentTime();
+            console.log("Video buffering at time: " + currentTime + ", emitting seek event");
+            socket.emit('seekTo', { room: roomId, time: currentTime });
+        }
     }
 }
-
-document.querySelector('.getInfo').addEventListener('click', () => {
-    if(roomId) {
-        socket.emit('getRoomLeader', roomId);
-    }
-});
 
 // Get URL from the search bar and create an iframe
 function initializeSearch() {
@@ -99,53 +115,62 @@ function initializeSearch() {
 
     searchForm.addEventListener('submit', (e) => {
         e.preventDefault();
-        createIFrame();
+        handleQueue(searchForm.querySelector('.searchBar').value);
     });
 
     const searchIcon = document.querySelector('.searchIcon');
 
     searchIcon.addEventListener('click', () => {
         if (searchForm.querySelector('.searchBar').value != "") {
-            createIFrame();
+            handleQueue(searchForm.querySelector('.searchBar').value);
         }
     });
 }
 
-// Create the iframe element and embed the YouTube video
-function createIFrame() {
-    const textboxValue = document.querySelector('.searchBar').value;
+function handleQueue(value) {
+    if(!videoLoaded && isYTLink(value)) {
+        createIFrame(value);
+    } else if(videoLoaded && isYTLink(value)) {
+        addToQueue(roomId, value);
+    }
+}
 
-    if (socket) {
+// Create the iframe element and handle the queue
+function createIFrame(textboxValue) {
+    if(socket) {
         socket.emit('videoUrl', { room: roomId, videoUrl: textboxValue });
+    }
+
+    if (textboxValue == "") {
+        return;
     }
 
     const existingIframe = document.querySelector('.iframe iframe');
     if (existingIframe) {
         existingIframe.remove();
     }
-    embedYoutube(textboxValue); 
+
+    embedYoutube(textboxValue);
+    videoLoaded = true;
 }
 
 // Embed the YouTube video in the iframe
 function embedYoutube(textboxValue) {
     const existingIframe = document.querySelector('.iframe iframe');
     const videoTitle = document.querySelector('.videoTitleText');
-
     if (!textboxValue.includes("youtube.com") && !textboxValue.includes("youtu.be")) {
         console.log("Invalid YouTube URL");
         const waitingElement = document.querySelector('.waiting');
-        
         waitingElement.textContent = "Invalid URL";
         waitingElement.style.color = "red";
         videoTitle.textContent = "";
-    
+
         setTimeout(() => {
             waitingElement.textContent = "...";
             waitingElement.style.color = "white";
         }, 3000);
         return;
     }
-    
     if (existingIframe) {
         existingIframe.remove();
     }
@@ -153,16 +178,13 @@ function embedYoutube(textboxValue) {
     const iframe = document.createElement('iframe');
     const convertedUrl = convertUrl(textboxValue);
     console.log("Embedding YouTube video with URL:", convertedUrl);
-
     iframe.width = "100%";
     iframe.height = "100%";
     iframe.src = convertedUrl;
     iframe.allow = "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture";
     iframe.frameBorder = 0;
     iframe.allowFullscreen = true;
-
     document.querySelector('.iframe').appendChild(iframe);
-
     // Initialize the YouTube Player
     player = new YT.Player(iframe, {
         events: {
@@ -193,6 +215,26 @@ function convertUrl(oldUrl) {
     }
 
     return "https://www.youtube.com/embed/" + videoID + "?enablejsapi=1&autoplay=1";
+}
+
+function isYTLink(url) {
+    const regexPattern = /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/(watch\?v=|embed\/|shorts\/)?([a-zA-Z0-9_-]{11})/;
+    return regexPattern.test(url);
+}
+
+/* Getters and Setters */
+function addToQueue(room, videoId) {
+    socket.emit('addToQueue', { room, videoId });
+}
+
+function getQueue(room, callback) {
+    console.log("Requesting queue for room:", room);
+    socket.emit('getQueue', room);
+
+    socket.once('queueData', (queue) => {
+        console.log("Received queue data from server:", queue);
+        callback(queue);
+    });
 }
 
 /* Permission Functions */
