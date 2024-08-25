@@ -41,7 +41,7 @@ function connectToRoom(room) {
     });
 
     socket.on('queueData', (queue) => {
-        console.log('Queue data:', queue);
+        console.log('Queue updated:', queue);
     });
 
     // Actions / Events to be emitted to the server
@@ -128,36 +128,30 @@ function initializeSearch() {
 }
 
 function handleQueue(value) {
-    if(!videoLoaded && isYTLink(value)) {
-        createIFrame(value);
-    } else if(videoLoaded && isYTLink(value)) {
-        addToQueue(roomId, value);
-    }
-}
-
-// Create the iframe element and handle the queue
-function createIFrame(textboxValue) {
-    if(socket) {
-        socket.emit('videoUrl', { room: roomId, videoUrl: textboxValue });
-    }
-
-    if (textboxValue == "") {
+    if(value == "") {
         return;
     }
 
-    const existingIframe = document.querySelector('.iframe iframe');
-    if (existingIframe) {
-        existingIframe.remove();
+    if(!videoLoaded && isYTLink(value)) {
+        embedYoutube(value);
+    } else if(videoLoaded && isYTLink(value)) {
+        addToQueue(roomId, value);
     }
-
-    embedYoutube(textboxValue);
-    videoLoaded = true;
 }
 
 // Embed the YouTube video in the iframe
 function embedYoutube(textboxValue) {
     const existingIframe = document.querySelector('.iframe iframe');
     const videoTitle = document.querySelector('.videoTitleText');
+
+    if(socket) {
+        socket.emit('videoUrl', { room: roomId, videoUrl: textboxValue });
+    }
+
+    if (existingIframe) {
+        existingIframe.remove();
+    }
+
     if (!textboxValue.includes("youtube.com") && !textboxValue.includes("youtu.be")) {
         console.log("Invalid YouTube URL");
         const waitingElement = document.querySelector('.waiting');
@@ -171,9 +165,6 @@ function embedYoutube(textboxValue) {
         }, 3000);
         return;
     }
-    if (existingIframe) {
-        existingIframe.remove();
-    }
 
     const iframe = document.createElement('iframe');
     const convertedUrl = convertUrl(textboxValue);
@@ -185,6 +176,7 @@ function embedYoutube(textboxValue) {
     iframe.frameBorder = 0;
     iframe.allowFullscreen = true;
     document.querySelector('.iframe').appendChild(iframe);
+
     // Initialize the YouTube Player
     player = new YT.Player(iframe, {
         events: {
@@ -195,6 +187,12 @@ function embedYoutube(textboxValue) {
             'onStateChange': onPlayerStateChange
         }
     });
+    videoLoaded = true;
+}
+
+function isYTLink(url) {
+    const regexPattern = /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/(watch\?v=|embed\/|shorts\/)?([a-zA-Z0-9_-]{11})/;
+    return regexPattern.test(url);
 }
 
 // Convert the YouTube URL to an embeddable URL
@@ -215,11 +213,6 @@ function convertUrl(oldUrl) {
     }
 
     return "https://www.youtube.com/embed/" + videoID + "?enablejsapi=1&autoplay=1";
-}
-
-function isYTLink(url) {
-    const regexPattern = /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/(watch\?v=|embed\/|shorts\/)?([a-zA-Z0-9_-]{11})/;
-    return regexPattern.test(url);
 }
 
 /* Getters and Setters */
