@@ -89,7 +89,7 @@ function onPlayerStateChange(event) {
                     videoLoaded = false;
                 } else {
                     console.log("Playing next video in queue " + queue[0]);
-                    createIFrame(queue[0]);
+                    embedYoutube(queue[0]);
                 }
             });
 
