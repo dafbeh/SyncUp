@@ -351,7 +351,7 @@ footer {
     width: 100%;
 }
 
-    
+
 /* Room CSS PC */
 @media only screen and (min-width: 769px) {
     .searchSectionRoom {
@@ -447,6 +447,32 @@ footer {
         justify-content: center;
         margin-top: 0px;
     }
+}
+
+.thumbnail {
+    display: fixed;
+    background-color: black;
+    aspect-ratio: 16 / 9;
+    margin-bottom: 5px;
+    height: auto;
+    width: 100%;
+}
+
+.thumbnailSettings {
+    display: flex;
+    justify-content: space-between;
+}
+
+.exitThumbnail {
+    margin: 5px;
+    height: 22px;
+    width: 22px;
+    filter: invert(30%) sepia(100%) saturate(7460%) hue-rotate(359deg) brightness(104%) contrast(101%);
+    transition: transform 0.3s ease
+}
+
+.exitThumbnail:hover {
+    transform: scale(1.1);
 }
 
 /* Room CSS Mobile */
