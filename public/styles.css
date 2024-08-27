@@ -402,15 +402,15 @@ footer {
         align-self: stretch;
         animation: fade-right 0.5s 0.4s backwards;
     }
-
+    
     .queueContainer {
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: flex-start;
         width: 100%;
-        height: 100%;
-        max-height: 100%;
+        max-height: 675px;
+        min-height: 90%;
         background-color: white;
         box-sizing: border-box;
         overflow-y: auto;
@@ -450,23 +450,30 @@ footer {
 }
 
 .thumbnail {
-    display: fixed;
+    position: relative;
+    display: flex;
     background-color: black;
     aspect-ratio: 16 / 9;
     margin-bottom: 5px;
-    height: auto;
     width: 100%;
+    max-width: 100%;
+    flex-shrink: 0;
+    background-size: cover;
+    background-position: center;
 }
 
 .thumbnailSettings {
-    display: flex;
-    justify-content: space-between;
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    z-index: 10;
 }
 
 .exitThumbnail {
     margin: 5px;
     height: 22px;
     width: 22px;
+    cursor: pointer;
     filter: invert(30%) sepia(100%) saturate(7460%) hue-rotate(359deg) brightness(104%) contrast(101%);
     transition: transform 0.3s ease
 }
@@ -519,18 +526,20 @@ footer {
         margin-bottom: 80px;
         animation: fade-up 0.5s 0.4s backwards;
     }
-
+    
     .queueContainer {
-        justify-content: center;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start;
         width: 100%;
-        height: 300px;
-        max-height: 100%;
+        max-height: 300px;
         background-color: white;
         box-sizing: border-box;
         overflow-y: auto;
         padding: 10px;
         border-radius: 0px 0px 15px 15px;
-    }
+    } 
 
     .boxTextBackground {
         display: flex;

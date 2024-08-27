@@ -2,6 +2,7 @@ let socket = null;
 let roomId = null;
 let player;
 let videoLoaded = false;
+let loadedVideoUrl = null;
 
 // On page load
 document.addEventListener('DOMContentLoaded', () => {
@@ -19,6 +20,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Connect to the WebSocket server
 function connectToRoom(room) {
+    if(socket) {
+        return;
+    }
+
     socket = io();
     socket.on('connect', () => {
         console.log("Connected to WebSocket server for room: " + room);
@@ -27,12 +32,12 @@ function connectToRoom(room) {
 
     // Send the URL to the server
     socket.on('videoUrl', (textboxValue) => {
-        // console.log("Received video URL from server: ", textboxValue);
-
-        const existingIframe = document.querySelector('.iframe iframe');
-        if (existingIframe) {
-            existingIframe.remove();
+        if (textboxValue === loadedVideoUrl) {
+            console.log("The video is already loaded, not re-embedding.");
+            return;
         }
+
+        loadedVideoUrl = textboxValue;
         embedYoutube(textboxValue);
     });
 
@@ -136,6 +141,7 @@ function handleQueue(value) {
         embedYoutube(value);
     } else if(videoLoaded && isYTLink(value)) {
         addToQueue(roomId, value);
+        createThumbnail(value);
     }
 }
 
@@ -143,6 +149,10 @@ function handleQueue(value) {
 function embedYoutube(textboxValue) {
     const existingIframe = document.querySelector('.iframe iframe');
     const videoTitle = document.querySelector('.videoTitleText');
+
+    if (socket && textboxValue !== loadedVideoUrl) {
+        socket.emit('videoUrl', { room: roomId, videoUrl: textboxValue });
+    }
 
     if(socket) {
         socket.emit('videoUrl', { room: roomId, videoUrl: textboxValue });
@@ -167,7 +177,8 @@ function embedYoutube(textboxValue) {
     }
 
     const iframe = document.createElement('iframe');
-    const convertedUrl = convertUrl(textboxValue);
+    const getID = convertUrl(textboxValue);
+    const convertedUrl = "https://www.youtube.com/embed/" + getID + "?enablejsapi=1&autoplay=1";
     console.log("Embedding YouTube video with URL:", convertedUrl);
     iframe.width = "100%";
     iframe.height = "100%";
@@ -188,6 +199,7 @@ function embedYoutube(textboxValue) {
         }
     });
     videoLoaded = true;
+    loadedVideoUrl = textboxValue;
 }
 
 function isYTLink(url) {
@@ -195,7 +207,7 @@ function isYTLink(url) {
     return regexPattern.test(url);
 }
 
-// Convert the YouTube URL to an embeddable URL
+// Convert the YouTube URL to an ID
 function convertUrl(oldUrl) {
     const url = new URL(oldUrl);
     let videoID;
@@ -212,7 +224,36 @@ function convertUrl(oldUrl) {
         videoID = url.pathname.split('/')[2] || url.pathname.split('/')[1];
     }
 
-    return "https://www.youtube.com/embed/" + videoID + "?enablejsapi=1&autoplay=1";
+    return videoID;
+}
+
+// Add thumbnail
+function createThumbnail(url) {
+    const videoId = convertUrl(url);
+    
+    const thumbnailUrl = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+
+    const queueContainer = document.querySelector('.queueContainer');
+
+    const thumbnail = document.createElement('div');
+    thumbnail.className = 'thumbnail';
+    thumbnail.style.backgroundImage = `url(${thumbnailUrl})`;
+    thumbnail.style.backgroundSize = 'cover';
+
+    const thumbnailSettings = document.createElement('div');
+    thumbnailSettings.className = 'thumbnailSettings';
+
+    const exitThumbnail = document.createElement('img');
+    exitThumbnail.className = 'exitThumbnail';
+    exitThumbnail.src = 'images/exit.png';
+    exitThumbnail.alt = 'exit';
+    exitThumbnail.draggable = false;
+
+    thumbnailSettings.appendChild(exitThumbnail);
+
+    thumbnail.appendChild(thumbnailSettings);
+
+    queueContainer.appendChild(thumbnail);
 }
 
 /* Getters and Setters */
