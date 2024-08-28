@@ -130,7 +130,18 @@ io.on('connection', (socket) => {
     socket.on('getQueue', (room) => {
         if (validRooms.has(room)) {
             socket.emit('queueData', roomQueue[room] || []);
-            roomQueue[room].shift();
+        }
+    });
+
+    socket.on('removeFromQueue', (data) => {
+        const { room, url } = data;
+        if (validRooms.has(room)) {
+            const queue = roomQueue[room];
+            const index = queue.findIndex(item => item.url === url);
+            if (index !== -1) {
+                queue.splice(index, 1);
+                io.to(room).emit('removeFromQueue', queue);
+            }
         }
     });
     

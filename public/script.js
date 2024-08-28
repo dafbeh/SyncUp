@@ -3,6 +3,7 @@ let roomId = null;
 let player;
 let videoLoaded = false;
 let loadedVideoUrl = null;
+let thumbnailCounter = 0;
 
 // On page load
 document.addEventListener('DOMContentLoaded', () => {
@@ -47,6 +48,10 @@ function connectToRoom(room) {
 
     socket.on('queueData', (queue) => {
         console.log('Queue updated:', queue);
+    });
+
+    socket.on(`removeFromQueue`, (queue) => {
+        console.log('Removed from queue:', queue);
     });
 
     // Actions / Events to be emitted to the server
@@ -105,6 +110,11 @@ function onPlayerStateChange(event) {
         } else if (event.data == YT.PlayerState.PLAYING) {
             console.log("Video playing, emitting play event");
             socket.emit('playVideo', { room: roomId });
+            const currentVideoUrl = player.getVideoUrl();
+            const currentThumbnail = document.querySelector(`.thumbnail[data-url="${currentVideoUrl}"]`);
+            if (currentThumbnail) {
+                closeThumbnail(currentThumbnail.dataset.id, currentVideoUrl);
+            }
 
         } else if (event.data == YT.PlayerState.BUFFERING) {
             const currentTime = player.getCurrentTime();
@@ -137,6 +147,11 @@ function handleQueue(value) {
         return;
     }
 
+    if(!socket) {
+        embedYoutube(value);
+        return;
+    }
+
     if(!videoLoaded && isYTLink(value)) {
         embedYoutube(value);
     } else if(videoLoaded && isYTLink(value)) {
@@ -150,16 +165,16 @@ function embedYoutube(textboxValue) {
     const existingIframe = document.querySelector('.iframe iframe');
     const videoTitle = document.querySelector('.videoTitleText');
 
+    if (existingIframe) {
+        existingIframe.remove();
+    }
+
     if (socket && textboxValue !== loadedVideoUrl) {
         socket.emit('videoUrl', { room: roomId, videoUrl: textboxValue });
     }
 
     if(socket) {
         socket.emit('videoUrl', { room: roomId, videoUrl: textboxValue });
-    }
-
-    if (existingIframe) {
-        existingIframe.remove();
     }
 
     if (!textboxValue.includes("youtube.com") && !textboxValue.includes("youtu.be")) {
@@ -228,10 +243,10 @@ function convertUrl(oldUrl) {
 }
 
 // Add thumbnail
+
 function createThumbnail(url) {
     const videoId = convertUrl(url);
-    
-    const thumbnailUrl = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+    const thumbnailUrl = "https://img.youtube.com/vi/" + videoId + "/hqdefault.jpg";
 
     const queueContainer = document.querySelector('.queueContainer');
 
@@ -239,6 +254,8 @@ function createThumbnail(url) {
     thumbnail.className = 'thumbnail';
     thumbnail.style.backgroundImage = `url(${thumbnailUrl})`;
     thumbnail.style.backgroundSize = 'cover';
+    thumbnail.dataset.url = url;
+    thumbnail.dataset.id = `thumbnail-` + thumbnailCounter++;
 
     const thumbnailSettings = document.createElement('div');
     thumbnailSettings.className = 'thumbnailSettings';
@@ -249,16 +266,30 @@ function createThumbnail(url) {
     exitThumbnail.alt = 'exit';
     exitThumbnail.draggable = false;
 
+    exitThumbnail.addEventListener('click', () => { 
+        closeThumbnail(thumbnail.dataset.id, url);
+    });
+
     thumbnailSettings.appendChild(exitThumbnail);
-
     thumbnail.appendChild(thumbnailSettings);
-
     queueContainer.appendChild(thumbnail);
+}
+
+function closeThumbnail(id, url) {
+    const thumbnail = document.querySelector('.thumbnail[data-id="' + id + '"]');
+    if (thumbnail) {
+        thumbnail.remove();
+        removeFromQueue(roomId, url);
+    }
 }
 
 /* Getters and Setters */
 function addToQueue(room, videoId) {
     socket.emit('addToQueue', { room, videoId });
+}
+
+function removeFromQueue(room, videoId) {
+    socket.emit('removeFromQueue', { room, videoId });
 }
 
 function getQueue(room, callback) {
