@@ -123,7 +123,7 @@ io.on('connection', (socket) => {
         const { room, videoId } = data;
         if (validRooms.has(room)) {
             roomQueue[room].push(videoId);
-            io.to(room).emit('addToQueue', roomQueue[room]);
+            io.to(room).emit('addToQueue', videoId);
         }
     });
 

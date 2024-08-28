@@ -40,10 +40,12 @@ function connectToRoom(room) {
 
         loadedVideoUrl = textboxValue;
         embedYoutube(textboxValue);
+        
     });
 
-    socket.on('addToQueue', (queue) => {
-            console.log("Added to queue: ", queue);
+    socket.on('addToQueue', (videoId) => {
+            console.log("Creating thumbnail for: ", videoId);
+            createThumbnail(videoId);
     });
 
     socket.on('queueData', (queue) => {
@@ -156,7 +158,6 @@ function handleQueue(value) {
         embedYoutube(value);
     } else if(videoLoaded && isYTLink(value)) {
         addToQueue(roomId, value);
-        createThumbnail(value);
     }
 }
 
