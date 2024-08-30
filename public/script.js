@@ -46,6 +46,16 @@ function connectToRoom(room) {
     socket.on('currentVideoState', (state) => {
         if (state.videoUrl) {
             embedYoutube(state.videoUrl);
+
+            getQueue(roomId, (queue) => {
+                if (queue.length === 0) {
+                    return;
+                } else {
+                    queue.forEach(videoId => {
+                        createThumbnail(videoId);
+                    });
+                }
+            });
         }
     
         if (player) {
