@@ -43,6 +43,26 @@ function connectToRoom(room) {
         
     });
 
+    socket.on('currentVideoState', (state) => {
+        if (state.videoUrl) {
+            embedYoutube(state.videoUrl);
+        }
+    
+        if (player) {
+            player.addEventListener('onReady', () => {
+                if (typeof state.currentTime !== 'undefined' && state.currentTime !== null) {
+                    player.seekTo(state.currentTime, true);
+                }
+    
+                if (state.isPlaying) {
+                    player.playVideo();
+                } else {
+                    player.pauseVideo();
+                }
+            });
+        }
+    });
+
     socket.on('addToQueue', (videoId) => {
             console.log("Creating thumbnail for: ", videoId);
             createThumbnail(videoId);

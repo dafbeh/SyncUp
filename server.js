@@ -15,6 +15,7 @@ const roomQueue = {};
 const roomLeader = {};
 const roomModerators = {};
 const roomUserList = {};
+const roomStates = {};
 
 app.use(express.static('public'));
 
@@ -30,6 +31,7 @@ app.get('/new-room', (req, res) => {
     roomUserList[roomId] = [];
     roomModerators[roomId] = [];
     roomQueue[roomId] = [];
+    roomStates[roomId] = {};
     res.redirect(`/${roomId}`);
 });
 
@@ -52,6 +54,7 @@ io.on('connection', (socket) => {
         if(validRooms.has(room)) {
             socket.join(room);
             socket.joinedRooms.push(room);
+            socket.emit('currentVideoState', roomStates[room]);
 
             if (roomUserList[room].length === 0) {
                 roomLeader[room] = socket.id;
@@ -93,13 +96,21 @@ io.on('connection', (socket) => {
     socket.on('videoUrl', (data) => {
         const { room, videoUrl } = data;
         if (validRooms.has(room)) {
+            roomStates[room] = {
+                ...roomStates[room],
+                videoUrl: videoUrl,
+                currentTime: 0,
+                isPlaying: false,
+            };
             io.to(room).emit('videoUrl', videoUrl);
         }
     });
 
     socket.on('pauseVideo', (data) => {
-        const { room } = data;
+        const { room, currentTime } = data;
         if (validRooms.has(room)) {
+            roomStates[room].isPlaying = false;
+            roomStates[room].currentTime = currentTime;
             io.to(room).emit('pauseVideo');
         }
     });
@@ -107,6 +118,7 @@ io.on('connection', (socket) => {
     socket.on('playVideo', (data) => {
         const { room } = data;
         if (validRooms.has(room)) {
+            roomStates[room].isPlaying = true;
             io.to(room).emit('playVideo');
         }
     });
@@ -114,6 +126,7 @@ io.on('connection', (socket) => {
     socket.on('seekTo', (data) => {
         const { room, time } = data;
         if (validRooms.has(room)) {
+            roomStates[room].currentTime = time;
             io.to(room).emit('seekTo', time);
         }
     });
