@@ -73,6 +73,29 @@ function connectToRoom(room) {
         }
     });
 
+    // Actions / Events to be emitted to the server
+    socket.on('videoAction', ({ action, time, serverTime }) => {
+        switch(action) {
+            case 'play':
+                if (player && player.playVideo) {
+                    player.playVideo();
+                }
+            break;
+
+            case 'pause':
+                if (player && player.pauseVideo) {
+                    player.pauseVideo();
+                }
+            break;
+
+            case 'seek':
+                if (player) {
+                    player.seekTo(time, true);
+                }
+            break;
+        }
+    });
+
     socket.on('addToQueue', (videoId) => {
             console.log("Creating thumbnail for: ", videoId);
             createThumbnail(videoId);
@@ -84,25 +107,6 @@ function connectToRoom(room) {
 
     socket.on(`removeFromQueue`, (queue) => {
         console.log('Removed from queue:', queue);
-    });
-
-    // Actions / Events to be emitted to the server
-    socket.on('pauseVideo', () => {
-        if (player && player.pauseVideo) {
-            player.pauseVideo();
-        }
-    });
-
-    socket.on('playVideo', () => {
-        if (player && player.playVideo) {
-            player.playVideo();
-        }
-    });
-
-    socket.on('seekTo', (time) => {
-        if (player) {
-            player.seekTo(time, true);
-        }
     });
 
     socket.on('roomLeader', (leader) => {
@@ -124,6 +128,8 @@ function connectToRoom(room) {
 // Event listener for the YouTube player state change
 function onPlayerStateChange(event) {
     if(roomId) {
+        const currentTime = player.getCurrentTime();
+
         if (event.data == YT.PlayerState.ENDED) {
             console.log("Video ended, playing next video in queue");
             getQueue(roomId, (queue) => {
@@ -137,12 +143,11 @@ function onPlayerStateChange(event) {
 
         } else if (event.data == YT.PlayerState.PAUSED) {
             console.log("Video paused, emitting pause event");
-            socket.emit('pauseVideo', { room: roomId });
+            socket.emit('videoAction', { room: roomId, action: 'pause', time: currentTime, clientTime: Date.now() });
 
         } else if (event.data == YT.PlayerState.PLAYING) {
             console.log("Video playing, emitting play event");
-            socket.emit('playVideo', { room: roomId });
-            const currentVideoUrl = player.getVideoUrl();
+            socket.emit('videoAction', { room: roomId, action: 'play', time: currentTime, clientTime: Date.now() });            const currentVideoUrl = player.getVideoUrl();
             const currentThumbnail = document.querySelector(`.thumbnail[data-url="${currentVideoUrl}"]`);
             if (currentThumbnail) {
                 closeThumbnail(currentThumbnail.dataset.id, currentVideoUrl);
@@ -151,7 +156,7 @@ function onPlayerStateChange(event) {
         } else if (event.data == YT.PlayerState.BUFFERING) {
             const currentTime = player.getCurrentTime();
             console.log("Video buffering at time: " + currentTime + ", emitting seek event");
-            socket.emit('seekTo', { room: roomId, time: currentTime });
+            socket.emit('videoAction', { room: roomId, action: 'seek', time: currentTime, clientTime: Date.now() });
         }
     }
 }
@@ -319,8 +324,8 @@ function addToQueue(room, videoId) {
     socket.emit('addToQueue', { room, videoId });
 }
 
-function removeFromQueue(room, videoId) {
-    socket.emit('removeFromQueue', { room, videoId });
+function removeFromQueue(room, url) {
+    socket.emit('removeFromQueue', { room, url });
 }
 
 function getQueue(room, callback) {

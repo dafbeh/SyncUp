@@ -106,28 +106,24 @@ io.on('connection', (socket) => {
         }
     });
 
-    socket.on('pauseVideo', (data) => {
-        const { room, currentTime } = data;
+    socket.on('videoAction', (data) => {
+        const { room, action, time } = data;
         if (validRooms.has(room)) {
-            roomStates[room].isPlaying = false;
-            roomStates[room].currentTime = currentTime;
-            io.to(room).emit('pauseVideo');
-        }
-    });
-
-    socket.on('playVideo', (data) => {
-        const { room } = data;
-        if (validRooms.has(room)) {
-            roomStates[room].isPlaying = true;
-            io.to(room).emit('playVideo');
-        }
-    });
-
-    socket.on('seekTo', (data) => {
-        const { room, time } = data;
-        if (validRooms.has(room)) {
-            roomStates[room].currentTime = time;
-            io.to(room).emit('seekTo', time);
+            switch(action) {
+                case 'play':
+                    roomStates[room].isPlaying = true;
+                    io.to(room).emit('videoAction', { action: 'play', time, serverTime: Date.now() });
+                    break;
+                case 'pause':
+                    roomStates[room].isPlaying = false;
+                    roomStates[room].currentTime = time;
+                    io.to(room).emit('videoAction', { action: 'pause', time, serverTime: Date.now() });
+                    break;
+                case 'seek':
+                    roomStates[room].currentTime = time;
+                    io.to(room).emit('videoAction', { action: 'seek', time, serverTime: Date.now() });
+                    break;
+            }
         }
     });
 
