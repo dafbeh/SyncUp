@@ -57,7 +57,7 @@ function connectToRoom(room) {
                 }
             });
         }
-    
+
         if (player) {
             player.addEventListener('onReady', () => {
                 if (typeof state.currentTime !== 'undefined' && state.currentTime !== null) {
@@ -147,14 +147,14 @@ function onPlayerStateChange(event) {
 
         } else if (event.data == YT.PlayerState.PLAYING) {
             console.log("Video playing, emitting play event");
-            socket.emit('videoAction', { room: roomId, action: 'play', time: currentTime, clientTime: Date.now() });            const currentVideoUrl = player.getVideoUrl();
+            socket.emit('videoAction', { room: roomId, action: 'play', time: currentTime, clientTime: Date.now() });            
+            const currentVideoUrl = player.getVideoUrl();
             const currentThumbnail = document.querySelector(`.thumbnail[data-url="${currentVideoUrl}"]`);
             if (currentThumbnail) {
                 closeThumbnail(currentThumbnail.dataset.id, currentVideoUrl);
             }
 
         } else if (event.data == YT.PlayerState.BUFFERING) {
-            const currentTime = player.getCurrentTime();
             console.log("Video buffering at time: " + currentTime + ", emitting seek event");
             socket.emit('videoAction', { room: roomId, action: 'seek', time: currentTime, clientTime: Date.now() });
         }
