@@ -13,7 +13,6 @@ const PORT = process.env.PORT || 3000;
 const validRooms = new Set();
 const roomQueue = {};
 const roomLeader = {};
-const roomModerators = {};
 const roomUserList = {};
 const roomStates = {};
 
@@ -24,14 +23,17 @@ server.listen(PORT, () => {
     console.log("Server is running on port " + PORT);
 });
 
-// Routes 
+// Routes
 app.get('/new-room', (req, res) => {
     const roomId = uuidv4();
     validRooms.add(roomId);
     roomUserList[roomId] = [];
-    roomModerators[roomId] = [];
     roomQueue[roomId] = [];
-    roomStates[roomId] = {};
+    roomStates[roomId] = { 
+        isPlaying: false, 
+        startTime: 0, 
+        elapsedPlayTime: 0 
+    };
     res.redirect(`/${roomId}`);
 });
 
@@ -51,10 +53,9 @@ io.on('connection', (socket) => {
     socket.joinedRooms = [];
 
     socket.on('joinRoom', (room) => {
-        if(validRooms.has(room)) {
+        if (validRooms.has(room)) {
             socket.join(room);
             socket.joinedRooms.push(room);
-            socket.emit('currentVideoState', roomStates[room]);
 
             if (roomUserList[room].length === 0) {
                 roomLeader[room] = socket.id;
@@ -81,53 +82,50 @@ io.on('connection', (socket) => {
                     delete roomLeader[room];
                 }
             }
-
-            const moderatorIndex = roomModerators[room].indexOf(socket.id);
-            if (moderatorIndex !== -1) {
-                roomModerators[room].splice(moderatorIndex, 1);
-                if (roomModerators[room].length === 0) {
-                    delete roomModerators[room];
-                }
-            }
             console.log(socket.id + " disconnected from " + room);
         });
     });
 
+    // Send video URL to everyone in the room
     socket.on('videoUrl', (data) => {
         const { room, videoUrl } = data;
         if (validRooms.has(room)) {
-            roomStates[room] = {
-                ...roomStates[room],
-                videoUrl: videoUrl,
-                currentTime: 0,
-                isPlaying: false,
-            };
             io.to(room).emit('videoUrl', videoUrl);
         }
     });
 
+    // Broadcast video action to the room
     socket.on('videoAction', (data) => {
         const { room, action, time } = data;
+        const currentTime = Date.now();
+        const state = roomStates[room];
+
         if (validRooms.has(room)) {
             switch(action) {
                 case 'play':
-                    roomStates[room].isPlaying = true;
-                    io.to(room).emit('videoAction', { action: 'play', time, serverTime: Date.now() });
+                    if (!state.isPlaying) {
+                        state.isPlaying = true;
+                        state.startTime = currentTime;
+                    }
                     break;
                 case 'pause':
-                    roomStates[room].isPlaying = false;
-                    roomStates[room].currentTime = time;
-                    io.to(room).emit('videoAction', { action: 'pause', time, serverTime: Date.now() });
+                    if (state.isPlaying) {
+                        state.isPlaying = false;
+                        state.elapsedPlayTime += currentTime - state.startTime;
+                        state.startTime = 0;
+                    }
                     break;
                 case 'seek':
-                    roomStates[room].currentTime = time;
-                    io.to(room).emit('videoAction', { action: 'seek', time, serverTime: Date.now() });
+                    state.startTime = currentTime - time * 1000;
+                    state.elapsedPlayTime = time * 1000;
                     break;
             }
+            io.to(room).emit('videoAction', { action, time, serverTime: currentTime, elapsedPlayTime: state.elapsedPlayTime });
+            console.log(`Elapsed play time: ${state.elapsedPlayTime / 1000} seconds`);
         }
     });
 
-    /* Getters and Setters */
+    /* Additional Functions and Listeners */
     socket.on('addToQueue', (data) => {
         const { room, videoId } = data;
         if (validRooms.has(room)) {
@@ -153,28 +151,12 @@ io.on('connection', (socket) => {
             }
         }
     });
-    
+
     socket.on('getRoomLeader', (room) => {
         if (validRooms.has(room)) {
             const leader = roomLeader[room];
             socket.emit('roomLeader', leader);
         }
     });
-
-    socket.on('getModerators', (room) => {
-        if (validRooms.has(room)) {
-            const mods = roomModerators[room] || [];
-            socket.emit('getModerators', mods);
-        }
-    });
-
-    socket.on('setModerator', (room) => {
-        if (validRooms.has(room)) {
-            if (!roomModerators[room]) {
-                roomModerators[room] = [];
-            }
-            roomModerators[room].push(socket.id);
-            socket.emit('setModerator', socket.id);
-        }
-    });
 });
+

@@ -43,57 +43,30 @@ function connectToRoom(room) {
         
     });
 
-    socket.on('currentVideoState', (state) => {
-        if (state.videoUrl) {
-            embedYoutube(state.videoUrl);
-
-            getQueue(roomId, (queue) => {
-                if (queue.length === 0) {
-                    return;
-                } else {
-                    queue.forEach(videoId => {
-                        createThumbnail(videoId);
-                    });
-                }
-            });
-        }
-
-        if (player) {
-            player.addEventListener('onReady', () => {
-                if (typeof state.currentTime !== 'undefined' && state.currentTime !== null) {
-                    player.seekTo(state.currentTime, true);
-                }
-    
-                if (state.isPlaying) {
-                    player.playVideo();
-                } else {
-                    player.pauseVideo();
-                }
-            });
-        }
-    });
-
-    // Actions / Events to be emitted to the server
-    socket.on('videoAction', ({ action, time, serverTime }) => {
+    // When a video action event is received
+    socket.on('videoAction', ({ action, time, elapsedPlayTime }) => {
         switch(action) {
             case 'play':
                 if (player && player.playVideo) {
                     player.playVideo();
                 }
-            break;
+                break;
 
             case 'pause':
                 if (player && player.pauseVideo) {
                     player.pauseVideo();
                 }
-            break;
+                break;
 
             case 'seek':
                 if (player) {
                     player.seekTo(time, true);
                 }
-            break;
+                break;
         }
+
+        // Display or update the elapsed play time in the UI
+        console.log(`Elapsed play time: ${elapsedPlayTime / 1000} seconds`);
     });
 
     socket.on('addToQueue', (videoId) => {
@@ -111,14 +84,6 @@ function connectToRoom(room) {
 
     socket.on('roomLeader', (leader) => {
             console.log(leader);
-    });
-
-    socket.on('getModerators', (mods) => {
-        console.log(mods);
-    });
-
-    socket.on('setModerator', (mod) => {
-        console.log(mod);
     });
 
     initializeSearch();
@@ -336,13 +301,4 @@ function getQueue(room, callback) {
         console.log("Received queue data from server:", queue);
         callback(queue);
     });
-}
-
-/* Permission Functions */
-function setModerator(socketID) {
-    socket.emit('setModerator', socketID);
-}
-
-function getModerators(room) {
-    socket.emit('getModerators', room);
 }
