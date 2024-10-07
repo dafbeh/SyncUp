@@ -234,7 +234,7 @@ function embedYoutube(textboxValue) {
     iframe.width = "100%";
     iframe.height = "100%";
     iframe.src = convertedUrl;
-    iframe.allow = "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture";
+    // iframe.allow = "";
     iframe.frameBorder = 0;
     iframe.allowFullscreen = true;
     document.querySelector('.iframe').appendChild(iframe);
