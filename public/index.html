@@ -7,50 +7,10 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <section class="header">
-        <div class="topBar">
-            <div class="leftGroup">
-                <img class="logo" alt="SyncUp" src="images/logo.png" draggable="false" onclick="window.location.href='/'">
-                <img class="syncUp" alt="Sync Header" src="images/header.png" draggable="false">
-            </div>
-            <div class="rightGroup">
-                <img class="account" alt="settings" src="images/account.png" draggable="false">
-            </div>
-        </div>
-        <hr class="horiztonalSpacer">
-    </section>
-
     <div class="subTopBar">
         <div id="gap"></div>
         <button class="newRoom" onclick="window.location.href='/new-room'">Create Room</button>
     </div>
-
-    <section class="searchSection">
-        <div class="dropDown">
-            <img class="dropArrow" src="images/arrow.png" alt="dropDown" draggable="false">
-        </div>
-        <div class="searchContainer">
-            <form id="searchForm" style="display: flex; align-items: center; width: 100%;">
-                <input type="text" class="searchBar" placeholder="Enter Url...">
-                <img class="searchIcon" src="images/search.png" alt="Search" draggable="false">
-            </form>
-        </div>
-    </section>    
-
-    <div class="videoContainer">
-        <div class="videoBox">
-            <h1 class="waiting">...</h1>
-            <div class="iframe"></div>
-        </div>
-
-        <div class="videoTitle">
-            <h1 class="videoTitleText"></h1>
-        </div>
-    </div>
-
-    <footer>
-    </footer>
-
     <script src="/socket.io/socket.io.js"></script>
     <script src="https://www.youtube.com/iframe_api"></script>
     <script src="script.js"></script>

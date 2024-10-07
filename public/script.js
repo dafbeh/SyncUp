@@ -113,14 +113,6 @@ function connectToRoom(room) {
             console.log(leader);
     });
 
-    socket.on('getModerators', (mods) => {
-        console.log(mods);
-    });
-
-    socket.on('setModerator', (mod) => {
-        console.log(mod);
-    });
-
     initializeSearch();
 }
 
@@ -336,13 +328,4 @@ function getQueue(room, callback) {
         console.log("Received queue data from server:", queue);
         callback(queue);
     });
-}
-
-/* Permission Functions */
-function setModerator(socketID) {
-    socket.emit('setModerator', socketID);
-}
-
-function getModerators(room) {
-    socket.emit('getModerators', room);
 }
