@@ -44,7 +44,6 @@ app.get('/:room', (req, res) => {
     }
 });
 
-// WebSocket server connection
 io.on('connection', (socket) => {
     socket.joinedRooms = [];
 
@@ -52,7 +51,6 @@ io.on('connection', (socket) => {
         if(validRooms.has(room)) {
             socket.join(room);
             socket.joinedRooms.push(room);
-            socket.emit('currentVideoState', roomStates[room]);
 
             if (roomUserList[room].length === 0) {
                 roomLeader[room] = socket.id;
@@ -83,37 +81,19 @@ io.on('connection', (socket) => {
         });
     });
 
+    // Send video URL to everyone in the room
     socket.on('videoUrl', (data) => {
         const { room, videoUrl } = data;
         if (validRooms.has(room)) {
-            roomStates[room] = {
-                ...roomStates[room],
-                videoUrl: videoUrl,
-                currentTime: 0,
-                isPlaying: false,
-            };
             io.to(room).emit('videoUrl', videoUrl);
         }
     });
 
+    // Broadcast video action to the room
     socket.on('videoAction', (data) => {
         const { room, action, time } = data;
         if (validRooms.has(room)) {
-            switch(action) {
-                case 'play':
-                    roomStates[room].isPlaying = true;
-                    io.to(room).emit('videoAction', { action: 'play', time, serverTime: Date.now() });
-                    break;
-                case 'pause':
-                    roomStates[room].isPlaying = false;
-                    roomStates[room].currentTime = time;
-                    io.to(room).emit('videoAction', { action: 'pause', time, serverTime: Date.now() });
-                    break;
-                case 'seek':
-                    roomStates[room].currentTime = time;
-                    io.to(room).emit('videoAction', { action: 'seek', time, serverTime: Date.now() });
-                    break;
-            }
+            io.to(room).emit('videoAction', { action, time, serverTime: Date.now() });
         }
     });
 
