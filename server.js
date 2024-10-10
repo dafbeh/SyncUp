@@ -31,13 +31,13 @@ app.get('/new-room', (req, res) => {
     roomQueue[roomId] = [];
     roomStates[roomId] = { 
         isPlaying: false, 
+        currentVideo: '',
         startTime: 0, 
         elapsedPlayTime: 0 
     };
     res.redirect(`/${roomId}`);
 });
 
-// Route to join a room
 app.get('/:room', (req, res) => {
     const roomId = req.params.room;
 
@@ -91,6 +91,7 @@ io.on('connection', (socket) => {
         const { room, videoUrl } = data;
         if (validRooms.has(room)) {
             io.to(room).emit('videoUrl', videoUrl);
+            roomStates[room].currentVideo = videoUrl;
         }
     });
 
@@ -121,7 +122,25 @@ io.on('connection', (socket) => {
                     break;
             }
             io.to(room).emit('videoAction', { action, time, serverTime: currentTime, elapsedPlayTime: state.elapsedPlayTime });
-            console.log(`Elapsed play time: ${state.elapsedPlayTime / 1000} seconds`);
+        }
+    });
+
+    setInterval(() => {
+        const currentTime = Date.now();
+        Object.entries(roomStates).forEach(([room, state]) => {
+            if (state.isPlaying) {
+                state.elapsedPlayTime += currentTime - state.startTime;
+                state.startTime = currentTime;
+                console.log("Play time = " + state.elapsedPlayTime / 1000);
+            }
+        });
+    }, 500);
+
+    socket.on('getVideoState', (room) => {
+        if (validRooms.has(room)) {
+            roomStates[room].serverTime = Date.now();
+            const state = roomStates[room];
+            socket.emit('videoState', state);
         }
     });
 
@@ -159,4 +178,3 @@ io.on('connection', (socket) => {
         }
     });
 });
-

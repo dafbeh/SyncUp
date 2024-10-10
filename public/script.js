@@ -29,6 +29,35 @@ function connectToRoom(room) {
     socket.on('connect', () => {
         console.log("Connected to WebSocket server for room: " + room);
         socket.emit('joinRoom', room);
+
+        getVideoState(roomId, (state) => {
+            const isPlaying = state.isPlaying;
+            const currentVideo = state.currentVideo;
+            const serverTime = state.serverTime;
+            const elapsedPlayTime = state.elapsedPlayTime;
+
+            if (currentVideo) {
+                embedYoutube(currentVideo);
+                setTimeout(() => {
+                    const currentTime = Date.now();
+                    const timeDifference = currentTime - serverTime;
+                    const seekTime = timeDifference + elapsedPlayTime;
+        
+                    console.log("time difference: " + timeDifference);
+        
+                    console.log("Seeking to time:", seekTime / 1000);
+                    
+                    player.seekTo(seekTime / 1000, true);
+
+                    if (isPlaying) {
+                        player.playVideo();
+                    } else {
+                        player.pauseVideo();
+                    }
+
+                }, 1500);
+            }
+        });
     });
 
     // Send the URL to the server
@@ -67,6 +96,10 @@ function connectToRoom(room) {
 
         // Display or update the elapsed play time in the UI
         console.log(`Elapsed play time: ${elapsedPlayTime / 1000} seconds`);
+    });
+
+    socket.on('videoState', (state) => {
+        console.log("Received video state from server:", state);
     });
 
     socket.on('addToQueue', (videoId) => {
@@ -210,6 +243,7 @@ function embedYoutube(textboxValue) {
             'onReady': function(event) {
                 const title = event.target.getVideoData().title;
                 videoTitle.textContent = title;
+                player.mute();
             },
             'onStateChange': onPlayerStateChange
         }
@@ -244,7 +278,6 @@ function convertUrl(oldUrl) {
 }
 
 // Add thumbnail
-
 function createThumbnail(url) {
     const videoId = convertUrl(url);
     const thumbnailUrl = "https://img.youtube.com/vi/" + videoId + "/hqdefault.jpg";
@@ -285,6 +318,14 @@ function closeThumbnail(id, url) {
 }
 
 /* Getters and Setters */
+function getVideoState(roomId, callback) {
+    socket.emit('getVideoState', roomId);
+
+    socket.once('videoState', (state) => {
+        callback(state);
+    });
+}
+
 function addToQueue(room, videoId) {
     socket.emit('addToQueue', { room, videoId });
 }
