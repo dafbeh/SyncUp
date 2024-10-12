@@ -33,7 +33,7 @@ app.get('/new-room', (req, res) => {
         isPlaying: false, 
         currentVideo: '',
         startTime: 0, 
-        elapsedPlayTime: 0 
+        elapsedPlayTime: 0
     };
     res.redirect(`/${roomId}`);
 });
@@ -56,14 +56,15 @@ io.on('connection', (socket) => {
         if (validRooms.has(room)) {
             socket.join(room);
             socket.joinedRooms.push(room);
-
+    
             if (roomUserList[room].length === 0) {
                 roomLeader[room] = socket.id;
             }
-
+    
             roomUserList[room].push(socket.id);
             console.log(socket.id + " connected to " + room);
         } else {
+            socket.emit('Room not found');
             socket.disconnect();
         }
     });
@@ -74,7 +75,7 @@ io.on('connection', (socket) => {
             if (userIndex !== -1) {
                 roomUserList[room].splice(userIndex, 1);
             }
-
+    
             if (roomLeader[room] === socket.id) {
                 if (roomUserList[room].length > 0) {
                     roomLeader[room] = roomUserList[room][0];
@@ -82,6 +83,16 @@ io.on('connection', (socket) => {
                     delete roomLeader[room];
                 }
             }
+    
+            if (roomUserList[room].length === 0) {
+                validRooms.delete(room);
+                delete roomQueue[room];
+                delete roomLeader[room];
+                delete roomUserList[room];
+                delete roomStates[room];
+                console.log(`Room ${room} has been removed`);
+            }
+    
             console.log(socket.id + " disconnected from " + room);
         });
     });
@@ -128,7 +139,7 @@ io.on('connection', (socket) => {
     setInterval(() => {
         const currentTime = Date.now();
         Object.entries(roomStates).forEach(([room, state]) => {
-            if (state.isPlaying) {
+            if (validRooms && state.isPlaying) {
                 state.elapsedPlayTime += currentTime - state.startTime;
                 state.startTime = currentTime;
                 console.log("Play time = " + state.elapsedPlayTime / 1000);

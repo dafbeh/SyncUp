@@ -4,6 +4,7 @@ let player;
 let videoLoaded = false;
 let loadedVideoUrl = null;
 let thumbnailCounter = 0;
+let canBuffer = false;
 
 // On page load
 document.addEventListener('DOMContentLoaded', () => {
@@ -30,6 +31,10 @@ function connectToRoom(room) {
         console.log("Connected to WebSocket server for room: " + room);
         socket.emit('joinRoom', room);
 
+        setTimeout(() => {
+            canBuffer = true;
+        }, 2000);
+
         getVideoState(roomId, (state) => {
             const isPlaying = state.isPlaying;
             const currentVideo = state.currentVideo;
@@ -54,7 +59,6 @@ function connectToRoom(room) {
                     } else {
                         player.pauseVideo();
                     }
-
                 }, 1500);
             }
         });
@@ -153,8 +157,10 @@ function onPlayerStateChange(event) {
             }
 
         } else if (event.data == YT.PlayerState.BUFFERING) {
-            console.log("Video buffering at time: " + currentTime + ", emitting seek event");
-            socket.emit('videoAction', { room: roomId, action: 'seek', time: currentTime, clientTime: Date.now() });
+            if (canBuffer) {
+                console.log("Video buffering at time: " + currentTime + ", emitting seek event");
+                socket.emit('videoAction', { room: roomId, action: 'seek', time: currentTime, clientTime: Date.now() });
+            }
         }
     }
 }
