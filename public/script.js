@@ -129,6 +129,14 @@ function connectToRoom(room) {
 // Listeners
 // Event listener for the YouTube player state change
 function onPlayerStateChange(event) {
+
+    // Global Media keys
+    if(event.data == YT.PlayerState.PLAYING) {
+        document.querySelector('.play').style.backgroundImage = "url('images/pause.png')";        
+    } else if(event.data == YT.PlayerState.PAUSED) {
+        document.querySelector('.play').style.backgroundImage = "url('images/play.png')";        
+    }
+
     if(roomId) {
         const currentTime = player.getCurrentTime();
 
@@ -149,7 +157,8 @@ function onPlayerStateChange(event) {
 
         } else if (event.data == YT.PlayerState.PLAYING) {
             console.log("Video playing, emitting play event");
-            socket.emit('videoAction', { room: roomId, action: 'play', time: currentTime, clientTime: Date.now() });            
+
+            socket.emit('videoAction', { room: roomId, action: 'play', time: currentTime, clientTime: Date.now() }); 
             const currentVideoUrl = player.getVideoUrl();
             const currentThumbnail = document.querySelector(`.thumbnail[data-url="${currentVideoUrl}"]`);
             if (currentThumbnail) {
@@ -233,7 +242,7 @@ function embedYoutube(textboxValue) {
 
     const iframe = document.createElement('iframe');
     const getID = convertUrl(textboxValue);
-    const convertedUrl = "https://www.youtube.com/embed/" + getID + "?enablejsapi=1&autoplay=1";
+    const convertedUrl = "https://www.youtube.com/embed/" + getID + "?enablejsapi=1&autoplay=1&controls=0";
     console.log("Embedding YouTube video with URL:", convertedUrl);
     iframe.width = "100%";
     iframe.height = "100%";
@@ -250,6 +259,7 @@ function embedYoutube(textboxValue) {
                 const title = event.target.getVideoData().title;
                 videoTitle.textContent = title;
                 player.mute();
+                resetMediaButtons();
             },
             'onStateChange': onPlayerStateChange
         }
@@ -321,6 +331,32 @@ function closeThumbnail(id, url) {
         thumbnail.remove();
         removeFromQueue(roomId, url);
     }
+}
+
+function resetMediaButtons() {
+    document.querySelector('.play').onclick = function() {
+        const playerState = player.getPlayerState();
+        if (playerState === YT.PlayerState.PLAYING) {
+            player.pauseVideo();
+        } else {
+            player.playVideo();
+        }
+    };
+
+    document.querySelector('.fullscreen').onclick = function() {
+        const iframe = document.querySelector('.iframe iframe');
+        if (iframe) {
+            if (iframe.requestFullscreen) {
+                iframe.requestFullscreen();
+            } else if (iframe.mozRequestFullScreen) {
+                iframe.mozRequestFullScreen();
+            } else if (iframe.webkitRequestFullscreen) {
+                iframe.webkitRequestFullscreen();
+            } else if (iframe.msRequestFullscreen) {
+                iframe.msRequestFullscreen();
+            }
+        }
+    };
 }
 
 /* Getters and Setters */
