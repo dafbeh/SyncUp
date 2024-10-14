@@ -49,6 +49,11 @@
                 <button class="play"></button>
                 <input type="range" class="seekBar" value="0" min="0" max="100">
                 <input type="range" class="volume" value="0" min="0" max="100">
+                <button class="settings"></button>
+                <div class="settingsM" style="display: none;">
+                    <button class="settingsO">Full Screen</button>
+                    <button class="settingsO">Quality</button>
+                </div>
                 <button class="fullscreen"></button>
             </div>
             <h1 class="videoTitleText"></h1>
@@ -61,5 +66,6 @@
     <script src="/socket.io/socket.io.js"></script>
     <script src="https://www.youtube.com/iframe_api"></script>
     <script src="script.js"></script>
+    <script src="media.js"></script>
 </body>
 </html>

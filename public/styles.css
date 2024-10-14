@@ -326,6 +326,7 @@ body {
     align-items: center;
     gap: 10px;
     margin-top: -10px;
+    position: relative; 
 }
 
 .play{
@@ -346,17 +347,48 @@ body {
     min-width: 50px;
 }
 
+.settings {
+    background: url('images/settings.png') no-repeat center center;
+    background-size: contain;
+    margin-top: 2px;
+    width: 40px;
+    height: 40px;
+    border: none;
+}
+
+.settingsM {
+    position: absolute;
+    top: -118px;
+    right: 0px;
+    background-color: #0f0f0f;
+    padding: 10px;
+    z-index: 1000;
+    display: none;
+}
+
+.settingsO {
+    display: block;
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 2px;
+    background-color: #0f0f0f;
+    color: #f0f0f0;
+    border: none;
+    text-align: left;
+    cursor: pointer;
+    font-size: x-large;
+}
+
+.settingsO:hover {
+    background-color: #474747;
+}
+
 .fullscreen{
     background: url('images/fullscreen.png') no-repeat center center;
     background-size: contain;
     width: 40px;
     height: 40px;
     border: none;
-    transition: transform 0.3s ease;
-}
-
-.fullscreen:hover {
-    transform: scale(1.05);
 }
 
 .videoTitleText {
