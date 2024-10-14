@@ -132,7 +132,9 @@ function onPlayerStateChange(event) {
 
     // Global Media keys
     if(event.data == YT.PlayerState.PLAYING) {
-        document.querySelector('.play').style.backgroundImage = "url('images/pause.png')";        
+        document.querySelector('.play').style.backgroundImage = "url('images/pause.png')";
+        updateVolume();
+        updateSeek();    
     } else if(event.data == YT.PlayerState.PAUSED) {
         document.querySelector('.play').style.backgroundImage = "url('images/play.png')";        
     }
@@ -260,6 +262,8 @@ function embedYoutube(textboxValue) {
                 videoTitle.textContent = title;
                 player.mute();
                 resetMediaButtons();
+                const duration = player.getDuration();
+                document.querySelector('.seekBar').max = duration;
             },
             'onStateChange': onPlayerStateChange
         }
@@ -332,6 +336,45 @@ function closeThumbnail(id, url) {
         removeFromQueue(roomId, url);
     }
 }
+
+function updateSeek() {
+    const seek = document.querySelector('.seekBar');
+    setInterval(() => {
+        if(player) {
+            seek.value = player.getCurrentTime();
+        }
+    }, 500);
+}
+
+function updateVolume() {
+    const volume = document.querySelector('.volume');
+    setInterval(() => {
+        if(player && !player.isMuted()) {
+            volume.value = player.getVolume();
+        } else if (player.isMuted) {
+            volume.value = 0;
+        }
+    }, 1000);
+}
+
+document.querySelector('.seekBar').addEventListener('input', (event) => {
+    const seekTime = event.target.value;
+    if (player) {
+        player.seekTo(seekTime, true);
+    }
+});
+
+document.querySelector('.volume').addEventListener('input', (event) => {
+    if (player) {
+        const volume = event.target.value;
+        player.setVolume(volume);
+
+        if(volume > 1) {
+            player.unMute();
+        }
+
+    }
+});
 
 function resetMediaButtons() {
     document.querySelector('.play').onclick = function() {

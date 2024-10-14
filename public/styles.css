@@ -338,6 +338,12 @@ body {
 
 .seekBar {
     width: 90%;
+    min-width: 40%;
+}
+
+.volume {
+    width: 15%;
+    min-width: 50px;
 }
 
 .fullscreen{
