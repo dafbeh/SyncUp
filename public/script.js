@@ -152,7 +152,7 @@ function onPlayerStateChange(event) {
                     embedYoutube(queue[0]);
                 }
             });
-
+ 
         } else if (event.data == YT.PlayerState.PAUSED) {
             console.log("Video paused, emitting pause event");
             socket.emit('videoAction', { room: roomId, action: 'pause', time: currentTime, clientTime: Date.now() });

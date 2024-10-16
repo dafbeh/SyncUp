@@ -47,21 +47,24 @@
         <div class="videoTitle">
             <div class="controls">
                 <button class="play"></button>
+                <label class="time">00:00</label>
                 <input type="range" class="seekBar" value="0" min="0" max="100">
-                <input type="range" class="volume" value="0" min="0" max="100">
+                <button class="volume"></button>
+                <div class="volumeM" style="display: none;">
+                    <input type="range" class="volumeR" value="0" min="0" max="100">
+                </div>
                 <button class="settings"></button>
                 <div class="settingsM" style="display: none;">
-                    <button class="settingsO">Full Screen</button>
-                    <button class="settingsO">Quality</button>
+                    <button id='fullscreen' class="settingsO">Full Screen</button>
+                    <button id='quality' class="settingsO">Quality</button>
                 </div>
-                <button class="fullscreen"></button>
+                <div class="qualityM" style="display: none;">
+                    <button class="settingsO"></button>
+                </div>
             </div>
             <h1 class="videoTitleText"></h1>
         </div>
     </div>
-
-    <footer>
-    </footer>
 
     <script src="/socket.io/socket.io.js"></script>
     <script src="https://www.youtube.com/iframe_api"></script>
