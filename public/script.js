@@ -9,7 +9,7 @@ let canBuffer = false;
 // On page load
 document.addEventListener('DOMContentLoaded', () => {
     roomId = window.location.pathname.split('/')[1];
-    const newRoom = document.querySelector('.newRoom');
+    const newRoom = document.querySelector('#newRoom');
 
     if (roomId) {
         connectToRoom(roomId);
@@ -132,11 +132,11 @@ function onPlayerStateChange(event) {
 
     // Global Media keys
     if(event.data == YT.PlayerState.PLAYING) {
-        document.querySelector('.play').style.backgroundImage = "url('images/pause.png')";
+        document.querySelector('#playSvg').setAttribute("d", "M5.163 3.819C5 4.139 5 4.559 5 5.4v13.2c0 .84 0 1.26.163 1.581a1.5 1.5 0 0 0 .656.655c.32.164.74.164 1.581.164h.2c.84 0 1.26 0 1.581-.163a1.5 1.5 0 0 0 .656-.656c.163-.32.163-.74.163-1.581V5.4c0-.84 0-1.26-.163-1.581a1.5 1.5 0 0 0-.656-.656C8.861 3 8.441 3 7.6 3h-.2c-.84 0-1.26 0-1.581.163a1.5 1.5 0 0 0-.656.656zm9 0C14 4.139 14 4.559 14 5.4v13.2c0 .84 0 1.26.164 1.581a1.5 1.5 0 0 0 .655.655c.32.164.74.164 1.581.164h.2c.84 0 1.26 0 1.581-.163a1.5 1.5 0 0 0 .655-.656c.164-.32.164-.74.164-1.581V5.4c0-.84 0-1.26-.163-1.581a1.5 1.5 0 0 0-.656-.656C17.861 3 17.441 3 16.6 3h-.2c-.84 0-1.26 0-1.581.163a1.5 1.5 0 0 0-.655.656z");
         updateVolume();
         updateSeek();    
     } else if(event.data == YT.PlayerState.PAUSED) {
-        document.querySelector('.play').style.backgroundImage = "url('images/play.png')";        
+        document.querySelector('#playSvg').setAttribute("d", "M8.286 3.407A1.5 1.5 0 0 0 6 4.684v14.632a1.5 1.5 0 0 0 2.286 1.277l11.888-7.316a1.5 1.5 0 0 0 0-2.555L8.286 3.407z");
     }
 
     if(roomId) {
@@ -162,7 +162,7 @@ function onPlayerStateChange(event) {
 
             socket.emit('videoAction', { room: roomId, action: 'play', time: currentTime, clientTime: Date.now() }); 
             const currentVideoUrl = player.getVideoUrl();
-            const currentThumbnail = document.querySelector(`.thumbnail[data-url="${currentVideoUrl}"]`);
+            const currentThumbnail = document.querySelector(`#thumbnail[data-url="${currentVideoUrl}"]`);
             if (currentThumbnail) {
                 closeThumbnail(currentThumbnail.dataset.id, currentVideoUrl);
             }
@@ -182,14 +182,14 @@ function initializeSearch() {
 
     searchForm.addEventListener('submit', (e) => {
         e.preventDefault();
-        handleQueue(searchForm.querySelector('.searchBar').value);
+        handleQueue(searchForm.querySelector('#searchBar').value);
     });
 
-    const searchIcon = document.querySelector('.searchIcon');
+    const searchIcon = document.querySelector('#searchIcon');
 
     searchIcon.addEventListener('click', () => {
-        if (searchForm.querySelector('.searchBar').value != "") {
-            handleQueue(searchForm.querySelector('.searchBar').value);
+        if (searchForm.querySelector('#searchBar').value != "") {
+            handleQueue(searchForm.querySelector('#searchBar').value);
         }
     });
 }
@@ -213,8 +213,8 @@ function handleQueue(value) {
 
 // Embed the YouTube video in the iframe
 function embedYoutube(textboxValue) {
-    const existingIframe = document.querySelector('.iframe iframe');
-    const videoTitle = document.querySelector('.videoTitleText');
+    const existingIframe = document.querySelector('#iframe iframe');
+    const videoTitle = document.querySelector('#videoTitleText');
 
     if (existingIframe) {
         existingIframe.remove();
@@ -230,7 +230,7 @@ function embedYoutube(textboxValue) {
 
     if (!textboxValue.includes("youtube.com") && !textboxValue.includes("youtu.be")) {
         console.log("Invalid YouTube URL");
-        const waitingElement = document.querySelector('.waiting');
+        const waitingElement = document.querySelector('#waiting');
         waitingElement.textContent = "Invalid URL";
         waitingElement.style.color = "red";
         videoTitle.textContent = "";
@@ -242,6 +242,7 @@ function embedYoutube(textboxValue) {
         return;
     }
 
+    document.getElementById('waiting').innerText = ""
     const iframe = document.createElement('iframe');
     const getID = convertUrl(textboxValue);
     const convertedUrl = "https://www.youtube.com/embed/" + getID + "?enablejsapi=1&autoplay=1&controls=0";
@@ -249,10 +250,9 @@ function embedYoutube(textboxValue) {
     iframe.width = "100%";
     iframe.height = "100%";
     iframe.src = convertedUrl;
-    // iframe.allow = "";
     iframe.frameBorder = 0;
     iframe.allowFullscreen = true;
-    document.querySelector('.iframe').appendChild(iframe);
+    document.querySelector('#iframe').appendChild(iframe);
 
     // Initialize the YouTube Player
     player = new YT.Player(iframe, {
@@ -263,7 +263,7 @@ function embedYoutube(textboxValue) {
                 player.mute();
                 resetMediaButtons();
                 const duration = player.getDuration();
-                document.querySelector('.seekBar').max = duration;
+                document.querySelector('#seekBar').max = duration;
             },
             'onStateChange': onPlayerStateChange
         }
@@ -279,87 +279,10 @@ function isYTLink(url) {
 
 // Convert the YouTube URL to an ID
 function convertUrl(oldUrl) {
-    const url = new URL(oldUrl);
-    let videoID;
-
-    if (url.hostname.includes("youtube.com") && url.searchParams.has("v")) {
-        videoID = url.searchParams.get("v");
+    const regex = /(?:https?:\/\/(?:www\.)?(?:youtube\.com\/(?:[^\/]+\/.+\/|\S+\/v\/|\S*?[?&]v=)|youtu\.be\/))([a-zA-Z0-9_-]{11})(?:[^\w\d\s-]|$)/;
+    const match = oldUrl.match(regex);
+    if (match && match[1]) {
+        return match[1];
     }
-
-    else if (url.hostname === "youtu.be") {
-        videoID = url.pathname.split('/')[1];
-    }
-
-    else if (url.pathname.startsWith("/shorts/")) {
-        videoID = url.pathname.split('/')[2] || url.pathname.split('/')[1];
-    }
-
-    return videoID;
-}
-
-// Add thumbnail
-function createThumbnail(url) {
-    const videoId = convertUrl(url);
-    const thumbnailUrl = "https://img.youtube.com/vi/" + videoId + "/hqdefault.jpg";
-
-    const queueContainer = document.querySelector('.queueContainer');
-
-    const thumbnail = document.createElement('div');
-    thumbnail.className = 'thumbnail';
-    thumbnail.style.backgroundImage = `url(${thumbnailUrl})`;
-    thumbnail.style.backgroundSize = 'cover';
-    thumbnail.dataset.url = url;
-    thumbnail.dataset.id = `thumbnail-` + thumbnailCounter++;
-
-    const thumbnailSettings = document.createElement('div');
-    thumbnailSettings.className = 'thumbnailSettings';
-
-    const exitThumbnail = document.createElement('img');
-    exitThumbnail.className = 'exitThumbnail';
-    exitThumbnail.src = 'images/exit.png';
-    exitThumbnail.alt = 'exit';
-    exitThumbnail.draggable = false;
-
-    exitThumbnail.addEventListener('click', () => { 
-        closeThumbnail(thumbnail.dataset.id, url);
-    });
-
-    thumbnailSettings.appendChild(exitThumbnail);
-    thumbnail.appendChild(thumbnailSettings);
-    queueContainer.appendChild(thumbnail);
-}
-
-function closeThumbnail(id, url) {
-    const thumbnail = document.querySelector('.thumbnail[data-id="' + id + '"]');
-    if (thumbnail) {
-        thumbnail.remove();
-        removeFromQueue(roomId, url);
-    }
-}
-
-/* Getters and Setters */
-function getVideoState(roomId, callback) {
-    socket.emit('getVideoState', roomId);
-
-    socket.once('videoState', (state) => {
-        callback(state);
-    });
-}
-
-function addToQueue(room, videoId) {
-    socket.emit('addToQueue', { room, videoId });
-}
-
-function removeFromQueue(room, url) {
-    socket.emit('removeFromQueue', { room, url });
-}
-
-function getQueue(room, callback) {
-    console.log("Requesting queue for room:", room);
-    socket.emit('getQueue', room);
-
-    socket.once('queueData', (queue) => {
-        console.log("Received queue data from server:", queue);
-        callback(queue);
-    });
+    return null;
 }
