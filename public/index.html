@@ -10,12 +10,12 @@
 <body class="h-screen bg-[#d2d3db] flex flex-col dark:bg-[#0f0f0f]">
     <div id="topBar" class="bg-[#d2d3db] flex justify-between items-center h-12 w-full dark:bg-[#0f0f0f]">
         <div id="rightSide" class="flex">
-            <img id="logo "class="w-12 h-12 dark:invert" alt="SyncUp" src="images/logo.svg" draggable="false" onclick="window.location.href='/'">
+            <img id="logo" class="w-12 h-12 dark:invert cursor-pointer" alt="SyncUp" src="images/logo.svg" draggable="false" onclick="window.location.href='/'">
             <h1 class="text-black dark:text-white font-bold text-3xl my-1 ml-2 font-mono">SyncUp</h1>
         </div>
         <div class="flex items-center">
             <img id="theme" alt="nightmode/lightmode" class="w-6 h-6 mr-5 cursor-pointer mr-2 dark:invert" src="images/sun.svg" draggable="false"> 
-            <img id="account" alt="settings" class="w-9 h-9 cursor-pointer mr-2 dark:invert"src="images/account.svg" draggable="false"> 
+            <img id="account" alt="settings" class="w-9 h-9 cursor-pointer mr-2 dark:invert" src="images/account.svg" draggable="false"> 
         </div>
     </div>
     <div id="horizontalSpacer" class="border-t-2 border-gray-500 w-full dark:border-white dark:border-t-1"></div>
@@ -45,7 +45,7 @@
                     <path id="playSvg" d="M8.286 3.407A1.5 1.5 0 0 0 6 4.684v14.632a1.5 1.5 0 0 0 2.286 1.277l11.888-7.316a1.5 1.5 0 0 0 0-2.555L8.286 3.407z" fill="#000000"/></svg>
                 </button>
                 <label id="time" class="text-black dark:text-white">00:00</label>
-                <input id="seekBar" type="range" class="w-full bg-gray-600 rounded-md" value="0" min="0" max="100">
+                <input id="seekBar" type="range" class="w-full bg-gray-600 rounded-md cursor-pointer" value="0" min="0" max="100">
                 <div class="relative">
                     <button id="volume" class="text-white bg-gray-800 p-1 rounded-md hover:bg-gray-600">
                         <svg class="invert w-8 h-8" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -65,7 +65,7 @@
                         <button id="fullscreen" class="text-white bg-gray-800 p-2 w-32 border rounded-md hover:bg-gray-600">Full Screen</button>
                         <button id="quality" class="text-white bg-gray-800 p-2 w-32 border rounded-md hover:bg-gray-600">Quality</button>
                     </div>
-                    <div id="qualityM" class="hidden absolute bottom-full right-0 flex flex-col-reverse bg-gray-800 rounded-lg">
+                    <div id="qualityM" class="hidden absolute bottom-full right-0 mb-2 flex flex-col-reverse bg-gray-800 rounded-lg">
                     </div>
                 </div>
             </div> 
@@ -75,7 +75,7 @@
 
     <script src="/socket.io/socket.io.js"></script>
     <script src="https://www.youtube.com/iframe_api"></script>
-    <script src="script.js"></script>
+    <script src="youtube.js"></script>
     <script src="media.js"></script>
 </body>
 </html>

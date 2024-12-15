@@ -275,7 +275,7 @@ function embedYoutube(textboxValue) {
   const convertedUrl =
     'https://www.youtube.com/embed/' +
     getID +
-    '?enablejsapi=1&autoplay=1&controls=0'
+    '?enablejsapi=1&autoplay=1&controls=0&playinfo=0&disablekb=1&rel=0'
   console.log('Embedding YouTube video with URL:', convertedUrl)
   iframe.width = '100%'
   iframe.height = '100%'
@@ -317,4 +317,75 @@ function convertUrl(oldUrl) {
     return match[1]
   }
   return null
+}
+
+// Add thumbnail
+function createThumbnail(url) {
+  const videoId = convertUrl(url);
+  const thumbnailUrl = "https://img.youtube.com/vi/" + videoId + "/hqdefault.jpg";
+
+  const queueContainer = document.querySelector('#queueContainer');
+
+  const thumbnail = document.createElement('div');
+  thumbnail.className = 'thumbnail-' + thumbnailCounter + ' w-full border mx-auto aspect-video rounded-lg relative mb-2';
+  thumbnail.style.backgroundImage = `url(${thumbnailUrl})`;
+  thumbnail.style.backgroundSize = 'cover';
+  thumbnail.style.backgroundPosition = 'center';
+  thumbnail.dataset.url = url;
+  thumbnail.dataset.id = `thumbnail-` + thumbnailCounter++;
+
+  const thumbnailSettings = document.createElement('div');
+  thumbnailSettings.dataset.id = 'thumbnailSettings';
+  thumbnailSettings.className = 'absolute top-1 left-1 flex items-center justify-center bg-black/50 hover:bg-black/75 rounded-full p-1';
+
+  const exitThumbnail = document.createElement('img');
+  exitThumbnail.id = 'exitThumbnail';
+  exitThumbnail.className = 'w-6 h-6 p-2 cursor-pointer';
+  exitThumbnail.src = 'images/exit.png';
+  exitThumbnail.alt = 'Close';
+  exitThumbnail.draggable = false;
+
+  exitThumbnail.addEventListener('click', () => {
+    closeThumbnail(thumbnail.dataset.id, url);
+    console.log("closing: " + thumbnail.dataset.id)
+  });
+
+  thumbnailSettings.appendChild(exitThumbnail);
+  thumbnail.appendChild(thumbnailSettings);
+  queueContainer.appendChild(thumbnail);
+}
+
+function closeThumbnail(id, url) {
+  const thumbnail = document.querySelector(`.thumbnail-${id.split('-')[1]}`);
+  if(thumbnail) {
+    thumbnail.remove();
+    removeFromQueue(roomId, url);
+  }
+}
+
+/* Getters and Setters */
+function getVideoState(roomId, callback) {
+  socket.emit('getVideoState', roomId);
+
+  socket.once('videoState', (state) => {
+      callback(state);
+  });
+}
+
+function addToQueue(room, videoId) {
+  socket.emit('addToQueue', { room, videoId });
+}
+
+function removeFromQueue(room, url) {
+  socket.emit('removeFromQueue', { room, url });
+}
+
+function getQueue(room, callback) {
+  console.log("Requesting queue for room:", room);
+  socket.emit('getQueue', room);
+
+  socket.once('queueData', (queue) => {
+      console.log("Received queue data from server:", queue);
+      callback(queue);
+  });
 }

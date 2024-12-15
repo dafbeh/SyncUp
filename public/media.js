@@ -11,6 +11,18 @@ document.getElementById('theme').onclick = function () {
   }
 };
 
+// Queue container resize
+window.addEventListener('resize', adjustQueueContainerHeight);
+window.addEventListener('load', adjustQueueContainerHeight);
+
+function adjustQueueContainerHeight() {
+    const videoBox = document.getElementById('videoBox');
+    const queueContainer = document.getElementById('queueContainer');
+    const videoBoxHeight = videoBox.offsetHeight;
+
+    queueContainer.style.maxHeight = videoBoxHeight + 'px';
+}
+
 // Functionality for seek bar
 document.querySelector('#seekBar').addEventListener('input', (event) => {
   const seekTime = event.target.value
@@ -233,3 +245,4 @@ function loadQualityOptions() {
     });
   }
 }
+
