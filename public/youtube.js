@@ -3,389 +3,368 @@ let roomId = null
 let player
 let videoLoaded = false
 let loadedVideoUrl = null
-let thumbnailCounter = 0
+let queue = []
 let canBuffer = false
+let isSeeking = false
+let localState = []
 
 // On page load
 document.addEventListener('DOMContentLoaded', () => {
-  roomId = window.location.pathname.split('/')[1]
-  const newRoom = document.querySelector('#newRoom')
+    roomId = window.location.pathname.split('/')[1]
+    const newRoom = document.querySelector('#newRoom')
 
-  if (roomId) {
-    connectToRoom(roomId)
-    newRoom.style.display = 'none'
-  } else {
-    initializeSearch()
-    newRoom.style.display = 'inline-block'
-  }
+    if (roomId) {
+        connectToRoom(roomId)
+        newRoom.style.display = 'none'
+    } else {
+        initializeSearch()
+        newRoom.style.display = 'inline-block'
+    }
 })
 
 // Connect to the WebSocket server
 function connectToRoom(room) {
-  if (socket) {
-    return
-  }
+    if (socket) {
+        return
+    }
 
-  socket = io()
-  socket.on('connect', () => {
-    console.log('Connected to WebSocket server for room: ' + room)
-    socket.emit('joinRoom', room)
+    socket = io()
+    socket.on('connect', () => {
+        console.log('Connected to WebSocket server for room: ' + room)
+        socket.emit('joinRoom', room)
 
-    setTimeout(() => {
-      canBuffer = true
-    }, 2000)
-
-    getVideoState(roomId, (state) => {
-      const isPlaying = state.isPlaying
-      const currentVideo = state.currentVideo
-      const serverTime = state.serverTime
-      const elapsedPlayTime = state.elapsedPlayTime
-
-      if (currentVideo) {
-        embedYoutube(currentVideo)
         setTimeout(() => {
-          const currentTime = Date.now()
-          const timeDifference = currentTime - serverTime
-          const seekTime = timeDifference + elapsedPlayTime
+            canBuffer = true
+        }, 2000)
 
-          console.log('time difference: ' + timeDifference)
+        getRoomState(roomId, (state) => {
+            localState[roomId] = state
+            const currentVideo = state.currentVideo
+            queue = state.roomQueue
+            
+            if (queue.length > 0) {
+                for (let i in queue) {
+                    createThumbnail(queue[i]);
+                    console.log("added: " + queue[i])
+                }
+            }
 
-          console.log('Seeking to time:', seekTime / 1000)
-
-          player.seekTo(seekTime / 1000, true)
-
-          if (isPlaying) {
-            player.playVideo()
-          } else {
-            player.pauseVideo()
-          }
-        }, 1500)
-      }
+            if (currentVideo) {
+                embedYoutube(currentVideo)
+            }
+        })
     })
-  })
 
-  // Send the URL to the server
-  socket.on('videoUrl', (textboxValue) => {
-    if (textboxValue === loadedVideoUrl) {
-      console.log('The video is already loaded, not re-embedding.')
-      return
-    }
-
-    loadedVideoUrl = textboxValue
-    embedYoutube(textboxValue)
-  })
-
-  // When a video action event is received
-  socket.on('videoAction', ({ action, time, elapsedPlayTime }) => {
-    switch (action) {
-      case 'play':
-        if (player && player.playVideo) {
-          player.playVideo()
+    // Send the URL to the server
+    socket.on('videoUrl', (textboxValue) => {
+        if (textboxValue === loadedVideoUrl) {
+            console.log('The video is already loaded, not re-embedding.')
+            return
         }
-        break
 
-      case 'pause':
-        if (player && player.pauseVideo) {
-          player.pauseVideo()
+        loadedVideoUrl = textboxValue
+        embedYoutube(textboxValue)
+    })
+
+    // When a video action event is received
+    socket.on('videoAction', ({ action, time }) => {
+        switch (action) {
+            case 'play':
+                if (player && player.playVideo) {
+                    player.playVideo()
+                }
+                break
+
+            case 'pause':
+                if (player && player.pauseVideo) {
+                    player.pauseVideo()
+
+                    getSyncInfo(roomId, (state) => {
+                        player.seekTo(state.videoTime, true)
+                    });
+                }
+                break
+
+            case 'seek':
+                if (player) {
+                    player.seekTo(time, true)
+                }
+                break
         }
-        break
+    })
 
-      case 'seek':
-        if (player) {
-          player.seekTo(time, true)
+    socket.on('roomState', (state) => {
+        console.log('Received video state from server:', state)
+    })
+
+    socket.on('addToQueue', (videoId) => {
+        console.log('Creating thumbnail for: ', videoId)
+        createThumbnail(videoId)
+    })
+
+    socket.on('queueData', (queue) => {
+        console.log('Queue updated:', queue)
+    })
+
+    socket.on(`removeFromQueue`, ({ queue, url }) => {
+        const thumbnail = document.querySelector(`[data-id="${url}"]`);
+        console.log(url);
+        if (thumbnail) {
+            thumbnail.remove();
+            queue.filter(function (e) { return e !== url }) // remove url from queue array
         }
-        break
-    }
+        console.log('Removed from queue:', queue)
+    })
 
-    // Display or update the elapsed play time in the UI
-    console.log(`Elapsed play time: ${elapsedPlayTime / 1000} seconds`)
-  })
+    socket.on('roomLeader', (leader) => {
+        console.log(leader)
+    })
 
-  socket.on('videoState', (state) => {
-    console.log('Received video state from server:', state)
-  })
-
-  socket.on('addToQueue', (videoId) => {
-    console.log('Creating thumbnail for: ', videoId)
-    createThumbnail(videoId)
-  })
-
-  socket.on('queueData', (queue) => {
-    console.log('Queue updated:', queue)
-  })
-
-  socket.on(`removeFromQueue`, (queue) => {
-    console.log('Removed from queue:', queue)
-  })
-
-  socket.on('roomLeader', (leader) => {
-    console.log(leader)
-  })
-
-  initializeSearch()
+    initializeSearch()
 }
 
 // Listeners
 // Event listener for the YouTube player state change
 function onPlayerStateChange(event) {
-  // Global Media keys
-  if (event.data == YT.PlayerState.PLAYING) {
-    document
-      .querySelector('#playSvg')
-      .setAttribute(
-        'd',
-        'M5.163 3.819C5 4.139 5 4.559 5 5.4v13.2c0 .84 0 1.26.163 1.581a1.5 1.5 0 0 0 .656.655c.32.164.74.164 1.581.164h.2c.84 0 1.26 0 1.581-.163a1.5 1.5 0 0 0 .656-.656c.163-.32.163-.74.163-1.581V5.4c0-.84 0-1.26-.163-1.581a1.5 1.5 0 0 0-.656-.656C8.861 3 8.441 3 7.6 3h-.2c-.84 0-1.26 0-1.581.163a1.5 1.5 0 0 0-.656.656zm9 0C14 4.139 14 4.559 14 5.4v13.2c0 .84 0 1.26.164 1.581a1.5 1.5 0 0 0 .655.655c.32.164.74.164 1.581.164h.2c.84 0 1.26 0 1.581-.163a1.5 1.5 0 0 0 .655-.656c.164-.32.164-.74.164-1.581V5.4c0-.84 0-1.26-.163-1.581a1.5 1.5 0 0 0-.656-.656C17.861 3 17.441 3 16.6 3h-.2c-.84 0-1.26 0-1.581.163a1.5 1.5 0 0 0-.655.656z'
-      )
-    updateVolume()
-    updateSeek()
-  } else if (event.data == YT.PlayerState.PAUSED) {
-    document
-      .querySelector('#playSvg')
-      .setAttribute(
-        'd',
-        'M8.286 3.407A1.5 1.5 0 0 0 6 4.684v14.632a1.5 1.5 0 0 0 2.286 1.277l11.888-7.316a1.5 1.5 0 0 0 0-2.555L8.286 3.407z'
-      )
-  }
-
-  if (roomId) {
-    const currentTime = player.getCurrentTime()
-
-    if (event.data == YT.PlayerState.ENDED) {
-      console.log('Video ended, playing next video in queue')
-      getQueue(roomId, (queue) => {
-        if (queue.length === 0) {
-          videoLoaded = false
-        } else {
-          console.log('Playing next video in queue ' + queue[0])
-          embedYoutube(queue[0])
-        }
-      })
+    // Global Media keys
+    if (event.data == YT.PlayerState.PLAYING) {
+        document
+            .querySelector('#playSvg')
+            .setAttribute(
+                'd',
+                'M5.163 3.819C5 4.139 5 4.559 5 5.4v13.2c0 .84 0 1.26.163 1.581a1.5 1.5 0 0 0 .656.655c.32.164.74.164 1.581.164h.2c.84 0 1.26 0 1.581-.163a1.5 1.5 0 0 0 .656-.656c.163-.32.163-.74.163-1.581V5.4c0-.84 0-1.26-.163-1.581a1.5 1.5 0 0 0-.656-.656C8.861 3 8.441 3 7.6 3h-.2c-.84 0-1.26 0-1.581.163a1.5 1.5 0 0 0-.656.656zm9 0C14 4.139 14 4.559 14 5.4v13.2c0 .84 0 1.26.164 1.581a1.5 1.5 0 0 0 .655.655c.32.164.74.164 1.581.164h.2c.84 0 1.26 0 1.581-.163a1.5 1.5 0 0 0 .655-.656c.164-.32.164-.74.164-1.581V5.4c0-.84 0-1.26-.163-1.581a1.5 1.5 0 0 0-.656-.656C17.861 3 17.441 3 16.6 3h-.2c-.84 0-1.26 0-1.581.163a1.5 1.5 0 0 0-.655.656z'
+            )
+            updateTimer()
     } else if (event.data == YT.PlayerState.PAUSED) {
-      console.log('Video paused, emitting pause event')
-      socket.emit('videoAction', {
-        room: roomId,
-        action: 'pause',
-        time: currentTime,
-        clientTime: Date.now(),
-      })
-    } else if (event.data == YT.PlayerState.PLAYING) {
-      console.log('Video playing, emitting play event')
-
-      socket.emit('videoAction', {
-        room: roomId,
-        action: 'play',
-        time: currentTime,
-        clientTime: Date.now(),
-      })
-      const currentVideoUrl = player.getVideoUrl()
-      const currentThumbnail = document.querySelector(
-        `#thumbnail[data-url="${currentVideoUrl}"]`
-      )
-      if (currentThumbnail) {
-        closeThumbnail(currentThumbnail.dataset.id, currentVideoUrl)
-      }
-    } else if (event.data == YT.PlayerState.BUFFERING) {
-      if (canBuffer) {
-        console.log(
-          'Video buffering at time: ' + currentTime + ', emitting seek event'
-        )
-        socket.emit('videoAction', {
-          room: roomId,
-          action: 'seek',
-          time: currentTime,
-          clientTime: Date.now(),
-        })
-      }
+        document
+            .querySelector('#playSvg')
+            .setAttribute(
+                'd',
+                'M8.286 3.407A1.5 1.5 0 0 0 6 4.684v14.632a1.5 1.5 0 0 0 2.286 1.277l11.888-7.316a1.5 1.5 0 0 0 0-2.555L8.286 3.407z'
+            )
     }
-  }
+
+    if (roomId) {
+        const currentTime = player.getCurrentTime()
+
+        if (event.data == YT.PlayerState.ENDED) {
+            console.log('Video ended, playing next video in queue')
+            getQueue(roomId, (queue) => {
+                if (queue.length === 0) {
+                    videoLoaded = false
+                } else {
+                    console.log('Playing next video in queue ' + queue[0])
+                    embedYoutube(queue[0])
+                    removeFromQueue(roomId, queue[0])
+                    document.querySelector('#volumeSvg').setAttribute(
+                        'd',
+                        'M7.093 15H4.5A1.5 1.5 0 0 1 3 13.5v-3A1.5 1.5 0 0 1 4.5 9h2.593l5.181-5.469C12.896 2.875 14 3.315 14 4.22v15.562c0 .904-1.104 1.344-1.726.688L7.093 15zm9.2-4.794a1 1 0 1 1 1.414-1.413l1.794 1.794 1.792-1.79a1 1 0 1 1 1.414 1.414l-1.793 1.791 1.793 1.795a1 1 0 1 1-1.414 1.413l-1.794-1.794-1.792 1.791a1 1 0 0 1-1.414-1.415l1.793-1.79-1.793-1.796z'
+                    )
+                    document.querySelector('#volumeR').value = 0;
+                }
+            })
+        } 
+    }
 }
 
 // Get URL from the search bar and create an iframe
 function initializeSearch() {
-  const searchForm = document.querySelector('#searchForm')
+    const searchForm = document.querySelector('#searchForm')
 
-  searchForm.addEventListener('submit', (e) => {
-    e.preventDefault()
-    handleQueue(searchForm.querySelector('#searchBar').value)
-  })
+    searchForm.addEventListener('submit', (e) => {
+        e.preventDefault()
+        handleQueue(searchForm.querySelector('#searchBar').value)
+    })
 
-  const searchIcon = document.querySelector('#searchIcon')
+    const searchIcon = document.querySelector('#searchIcon')
 
-  searchIcon.addEventListener('click', () => {
-    if (searchForm.querySelector('#searchBar').value != '') {
-      handleQueue(searchForm.querySelector('#searchBar').value)
-    }
-  })
+    searchIcon.addEventListener('click', () => {
+        if (searchForm.querySelector('#searchBar').value != '') {
+            handleQueue(searchForm.querySelector('#searchBar').value)
+        }
+    })
 }
 
 function handleQueue(value) {
-  if (value == '') {
-    return
-  }
+    if (value == '') {
+        return
+    }
 
-  if (!socket) {
-    embedYoutube(value)
-    return
-  }
+    if (!socket) {
+        embedYoutube(value)
+        return
+    }
 
-  if (!videoLoaded && isYTLink(value)) {
-    embedYoutube(value)
-  } else if (videoLoaded && isYTLink(value)) {
-    addToQueue(roomId, value)
-  }
+    if (!videoLoaded && isYTLink(value)) {
+        socket.emit('videoUrl', { room: roomId, videoUrl: value })
+    } else if (videoLoaded && isYTLink(value)) {
+        addToQueue(roomId, value)
+    }
 }
 
 // Embed the YouTube video in the iframe
 function embedYoutube(textboxValue) {
-  const existingIframe = document.querySelector('#iframe iframe')
-  const videoTitle = document.querySelector('#videoTitleText')
+    const existingIframe = document.querySelector('#iframe iframe')
+    const videoTitle = document.querySelector('#videoTitleText')
 
-  if (existingIframe) {
-    existingIframe.remove()
-  }
+    if (existingIframe) {
+        existingIframe.remove()
+    }
 
-  if (socket && textboxValue !== loadedVideoUrl) {
-    socket.emit('videoUrl', { room: roomId, videoUrl: textboxValue })
-  }
+    if (socket && textboxValue !== loadedVideoUrl) {
+        socket.emit('videoUrl', { room: roomId, videoUrl: textboxValue })
+    }
 
-  if (socket) {
-    socket.emit('videoUrl', { room: roomId, videoUrl: textboxValue })
-  }
+    if (socket) {
+        socket.emit('videoUrl', { room: roomId, videoUrl: textboxValue })
+    }
 
-  if (
-    !textboxValue.includes('youtube.com') &&
-    !textboxValue.includes('youtu.be')
-  ) {
-    console.log('Invalid YouTube URL')
-    const waitingElement = document.querySelector('#waiting')
-    waitingElement.textContent = 'Invalid URL'
-    waitingElement.style.color = 'red'
-    videoTitle.textContent = ''
+    if (
+        !textboxValue.includes('youtube.com') &&
+        !textboxValue.includes('youtu.be')
+    ) {
+        console.log('Invalid YouTube URL')
+        const waitingElement = document.querySelector('#waiting')
+        waitingElement.textContent = 'Invalid URL'
+        waitingElement.style.color = 'red'
+        videoTitle.textContent = ''
 
-    setTimeout(() => {
-      waitingElement.textContent = '...'
-      waitingElement.style.color = 'white'
-    }, 3000)
-    return
-  }
+        setTimeout(() => {
+            waitingElement.textContent = '...'
+            waitingElement.style.color = 'white'
+        }, 3000)
+        return
+    }
 
-  document.getElementById('waiting').innerText = ''
-  const iframe = document.createElement('iframe')
-  const getID = convertUrl(textboxValue)
-  const convertedUrl =
-    'https://www.youtube.com/embed/' +
-    getID +
-    '?enablejsapi=1&autoplay=1&controls=0&playinfo=0&disablekb=1&rel=0'
-  console.log('Embedding YouTube video with URL:', convertedUrl)
-  iframe.width = '100%'
-  iframe.height = '100%'
-  iframe.src = convertedUrl
-  iframe.frameBorder = 0
-  iframe.allowFullscreen = true
-  document.querySelector('#iframe').appendChild(iframe)
+    document.getElementById('waiting').innerText = ''
+    const iframe = document.createElement('iframe')
+    const getID = convertUrl(textboxValue)
+    const convertedUrl =
+        'https://www.youtube.com/embed/' +
+        getID +
+        '?enablejsapi=1&autoplay=1&controls=0&playinfo=0&disablekb=1&rel=0'
+    console.log('Embedding YouTube video with URL:', convertedUrl)
+    iframe.width = '100%'
+    iframe.height = '100%'
+    iframe.src = convertedUrl
+    iframe.frameBorder = 0
+    iframe.allowFullscreen = true
+    document.querySelector('#iframe').appendChild(iframe)
 
-  // Initialize the YouTube Player
-  player = new YT.Player(iframe, {
-    events: {
-      onReady: function (event) {
-        const title = event.target.getVideoData().title
-        videoTitle.textContent = title
-        player.mute()
-        resetMediaButtons()
-        const duration = player.getDuration()
-        document.querySelector('#seekBar').max = duration
-      },
-      onStateChange: onPlayerStateChange,
-    },
-  })
-  videoLoaded = true
-  loadedVideoUrl = textboxValue
+    // Initialize the YouTube Player
+    player = new YT.Player(iframe, {
+        events: {
+            onReady: function (event) {
+                const title = event.target.getVideoData().title
+                videoTitle.textContent = title
+                player.mute()
+                const duration = player.getDuration()
+                document.querySelector('#seekBar').max = duration
+
+                if(roomId) {
+                    if(localState[roomId].isPlaying) {
+                        player.playVideo()
+                    } else {
+                        player.pauseVideo()
+                    }
+
+                    getSyncInfo(roomId, (state) => {
+                        console.log("welcome, seeking to: " + state.videoTime)
+                        player.seekTo(state.videoTime, true)
+                    })
+                }
+            },
+            onStateChange: onPlayerStateChange,
+        },
+    })
+    videoLoaded = true
+    loadedVideoUrl = textboxValue
 }
 
 function isYTLink(url) {
-  const regexPattern =
-    /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/(watch\?v=|embed\/|shorts\/)?([a-zA-Z0-9_-]{11})/
-  return regexPattern.test(url)
+    const regexPattern =
+        /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/(watch\?v=|embed\/|shorts\/)?([a-zA-Z0-9_-]{11})/
+    return regexPattern.test(url)
 }
 
 // Convert the YouTube URL to an ID
 function convertUrl(oldUrl) {
-  const regex =
-    /(?:https?:\/\/(?:www\.)?(?:youtube\.com\/(?:[^\/]+\/.+\/|\S+\/v\/|\S*?[?&]v=)|youtu\.be\/))([a-zA-Z0-9_-]{11})(?:[^\w\d\s-]|$)/
-  const match = oldUrl.match(regex)
-  if (match && match[1]) {
-    return match[1]
-  }
-  return null
+    const regex =
+        /(?:https?:\/\/(?:www\.)?(?:youtube\.com\/(?:[^\/]+\/.+\/|\S+\/v\/|\S*?[?&]v=)|youtu\.be\/))([a-zA-Z0-9_-]{11})(?:[^\w\d\s-]|$)/
+    const match = oldUrl.match(regex)
+    if (match && match[1]) {
+        return match[1]
+    }
+    return null
 }
 
 // Add thumbnail
 function createThumbnail(url) {
-  const videoId = convertUrl(url);
-  const thumbnailUrl = "https://img.youtube.com/vi/" + videoId + "/hqdefault.jpg";
+    const videoId = convertUrl(url);
+    const thumbnailUrl = "https://img.youtube.com/vi/" + videoId + "/hqdefault.jpg";
 
-  const queueContainer = document.querySelector('#queueContainer');
+    const queueContainer = document.querySelector('#queueContainer');
 
-  const thumbnail = document.createElement('div');
-  thumbnail.className = 'thumbnail-' + thumbnailCounter + ' w-full border mx-auto aspect-video rounded-lg relative mb-2';
-  thumbnail.style.backgroundImage = `url(${thumbnailUrl})`;
-  thumbnail.style.backgroundSize = 'cover';
-  thumbnail.style.backgroundPosition = 'center';
-  thumbnail.dataset.url = url;
-  thumbnail.dataset.id = `thumbnail-` + thumbnailCounter++;
+    const thumbnail = document.createElement('div');
+    thumbnail.className = url + ' w-full border mx-auto aspect-video rounded-lg relative mb-2';
+    thumbnail.style.backgroundImage = `url(${thumbnailUrl})`;
+    thumbnail.style.backgroundSize = 'cover';
+    thumbnail.style.backgroundPosition = 'center';
+    thumbnail.dataset.url = url;
+    thumbnail.dataset.id = url;
 
-  const thumbnailSettings = document.createElement('div');
-  thumbnailSettings.dataset.id = 'thumbnailSettings';
-  thumbnailSettings.className = 'absolute top-1 left-1 flex items-center justify-center bg-black/50 hover:bg-black/75 rounded-full p-1';
+    const thumbnailSettings = document.createElement('div');
+    thumbnailSettings.dataset.id = 'thumbnailSettings';
+    thumbnailSettings.className = 'absolute top-1 left-1 flex items-center justify-center bg-black/50 hover:bg-black/75 rounded-full p-1';
 
-  const exitThumbnail = document.createElement('img');
-  exitThumbnail.id = 'exitThumbnail';
-  exitThumbnail.className = 'w-6 h-6 p-2 cursor-pointer';
-  exitThumbnail.src = 'images/exit.png';
-  exitThumbnail.alt = 'Close';
-  exitThumbnail.draggable = false;
+    const exitThumbnail = document.createElement('img');
+    exitThumbnail.id = 'exitThumbnail';
+    exitThumbnail.className = 'w-6 h-6 p-2 cursor-pointer';
+    exitThumbnail.src = 'images/exit.png';
+    exitThumbnail.alt = 'Close';
+    exitThumbnail.draggable = false;
 
-  exitThumbnail.addEventListener('click', () => {
-    closeThumbnail(thumbnail.dataset.id, url);
-    console.log("closing: " + thumbnail.dataset.id)
-  });
+    exitThumbnail.addEventListener('click', () => {
+        removeFromQueue(roomId, thumbnail.dataset.url)
+        console.log("closing: " + thumbnail.dataset.id)
+    });
 
-  thumbnailSettings.appendChild(exitThumbnail);
-  thumbnail.appendChild(thumbnailSettings);
-  queueContainer.appendChild(thumbnail);
-}
-
-function closeThumbnail(id, url) {
-  const thumbnail = document.querySelector(`.thumbnail-${id.split('-')[1]}`);
-  if(thumbnail) {
-    thumbnail.remove();
-    removeFromQueue(roomId, url);
-  }
+    thumbnailSettings.appendChild(exitThumbnail);
+    thumbnail.appendChild(thumbnailSettings);
+    queueContainer.appendChild(thumbnail);
 }
 
 /* Getters and Setters */
-function getVideoState(roomId, callback) {
-  socket.emit('getVideoState', roomId);
+function getRoomState(roomId, callback) {
+    socket.emit('getRoomState', roomId);
 
-  socket.once('videoState', (state) => {
-      callback(state);
-  });
+    socket.once('roomState', (state) => {
+        callback(state);
+    });
+}
+
+function getSyncInfo(roomId, callback) {
+    socket.emit('getSyncInfo', roomId);
+
+    socket.once('syncInfo', (state) => {
+        callback(state);
+    });
 }
 
 function addToQueue(room, videoId) {
-  socket.emit('addToQueue', { room, videoId });
+    socket.emit('addToQueue', { room, videoId });
 }
 
 function removeFromQueue(room, url) {
-  socket.emit('removeFromQueue', { room, url });
+    socket.emit('removeFromQueue', { room, url });
 }
 
 function getQueue(room, callback) {
-  console.log("Requesting queue for room:", room);
-  socket.emit('getQueue', room);
+    console.log("Requesting queue for room:", room);
+    socket.emit('getQueue', room);
 
-  socket.once('queueData', (queue) => {
-      console.log("Received queue data from server:", queue);
-      callback(queue);
-  });
+    socket.once('queueData', (queue) => {
+        console.log("Received queue data from server:", queue);
+        callback(queue);
+    });
 }
