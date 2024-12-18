@@ -13,9 +13,9 @@ document.getElementById('theme').onclick = function () {
 
 // Play button
 document.querySelector('#play').onclick = function () {
-    if(!roomId) {
-        const playerState = player.getPlayerState()
+    const playerState = player.getPlayerState()
 
+    if(!roomId) {
         if(playerState === YT.PlayerState.PLAYING) {
             player.pauseVideo()
         } else {
@@ -26,23 +26,32 @@ document.querySelector('#play').onclick = function () {
 
     getRoomState(roomId, (state) => {
         queue = state.roomQueue
-        
         if (state.isPlaying) {
-            console.log('Video paused, emitting pause event')
-            socket.emit('videoAction', {
-                room: roomId,
-                action: 'pause',
-                time: player.getCurrentTime(),
-            })
+            if(playerState === YT.PlayerState.PAUSED) {
+                getSyncInfo(roomId, (state) => {
+                    player.seekTo(state.videoTime, true)
+                    player.playVideo()
+                });
+            } else {
+                console.log('Video paused, emitting pause event')
+                socket.emit('videoAction', {
+                    room: roomId,
+                    action: 'pause',
+                    time: player.getCurrentTime(),
+                })
+            }
         } else {
-            console.log('Video playing, emitting play event')
-            socket.emit('videoAction', {
-                room: roomId,
-                action: 'play',
-                time: player.getCurrentTime(),
-            })
+            if(playerState === YT.PlayerState.PLAYING) {
+                player.pauseVideo()
+            } else {
+                console.log('Video playing, emitting play event')
+                socket.emit('videoAction', {
+                    room: roomId,
+                    action: 'play',
+                    time: player.getCurrentTime(),
+                })
+            }
         }
-
     })
 }
 
@@ -66,7 +75,7 @@ document.querySelector('#seekBar').addEventListener('input', (event) => {
 
     document.addEventListener("mouseup", () => {
         isSeeking = false;
-    });
+    }, { once: true });
 })
 
 function updateTimer() {
@@ -74,12 +83,12 @@ function updateTimer() {
     const time = document.querySelector('#time')
 
     setInterval(() => {
-        if (player) {
+        if (player && !justJoined) {
             seek.value = player.getCurrentTime()
             time.textContent =
                 '-' + timeLeft(player.getCurrentTime(), player.getDuration())
         }
-    }, 500)
+    }, 2000)
 }
 
 // Queue container resize
@@ -116,10 +125,9 @@ document.querySelector('#volumeR').addEventListener('input', (event) => {
     const volume = document.querySelector('#volumeR')
     const volumeM = document.querySelector('#volumeSvg')
     if (player) {
-        const volume = event.target.value
-        player.setVolume(volume)
+        player.setVolume(volume.value)
 
-        if (volume > 1) {
+        if (volume.value > 1) {
             player.unMute()
         }
     }
@@ -259,7 +267,7 @@ function loadQualityOptions() {
 
         qualityLevels.forEach((level) => {
             if (level.includes('hd') || level.includes('auto')) {
-                const button = document.createElement('qualityO');
+                const button = document.createElement('button');
 
                 button.className = 'relative flex flex-col text-white bg-gray-800 p-1 w-20 border rounded-md hover:bg-gray-600 cursor-pointer';
                 button.textContent = level.replace('hd', '').toUpperCase();
