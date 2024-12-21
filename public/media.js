@@ -83,24 +83,26 @@ function updateTimer() {
     const time = document.querySelector('#time')
 
     setInterval(() => {
-        if (player && !justJoined) {
+        if (player) {
             seek.value = player.getCurrentTime()
             time.textContent =
                 '-' + timeLeft(player.getCurrentTime(), player.getDuration())
         }
-    }, 2000)
+    }, 500)
 }
 
-// Queue container resize
-window.addEventListener('resize', adjustQueueContainerHeight);
-window.addEventListener('load', adjustQueueContainerHeight);
+if(roomId) {
+    // Queue container resize
+    window.addEventListener('resize', adjustQueueContainerHeight);
+    window.addEventListener('load', adjustQueueContainerHeight);
 
-function adjustQueueContainerHeight() {
-    const videoBox = document.getElementById('videoBox');
-    const queueContainer = document.getElementById('queueContainer');
-    const videoBoxHeight = videoBox.offsetHeight;
+    function adjustQueueContainerHeight() {
+        const videoBox = document.getElementById('videoBox');
+        const queueContainer = document.getElementById('queueContainer');
+        const videoBoxHeight = videoBox.offsetHeight;
 
-    queueContainer.style.maxHeight = videoBoxHeight + 'px';
+        queueContainer.style.maxHeight = videoBoxHeight + 'px';
+    }
 }
 
 // Calculates how much time left on video
@@ -284,3 +286,6 @@ function loadQualityOptions() {
     }
 }
 
+function callAlert(text) {
+    
+}

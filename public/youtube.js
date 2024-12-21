@@ -2,10 +2,12 @@ let socket = null
 let roomId = null
 let player
 let videoLoaded = false
-let queue = []
 let justJoined = true
 let isSeeking = false
+let queue = []
 let localState = []
+let serverPaused = false
+let autoPlayBlocked = false
 
 // On page load
 document.addEventListener('DOMContentLoaded', () => {
@@ -69,6 +71,11 @@ function connectToRoom(room) {
                 if (player && player.pauseVideo) {
                     player.pauseVideo()
 
+                    serverPaused = true
+                    setTimeout(() => {
+                        serverPaused = false
+                    }, 1000)
+
                     getSyncInfo(roomId, (state) => {
                         player.seekTo(state.videoTime, true)
                     });
@@ -122,43 +129,6 @@ function connectToRoom(room) {
     })
 
     initializeSearch()
-}
-
-// Listeners
-// Event listener for the YouTube player state change
-function onPlayerStateChange(event) {
-    // Global Media keys
-    if (event.data == YT.PlayerState.PLAYING) {
-        document
-            .querySelector('#playSvg')
-            .setAttribute(
-                'd',
-                'M5.163 3.819C5 4.139 5 4.559 5 5.4v13.2c0 .84 0 1.26.163 1.581a1.5 1.5 0 0 0 .656.655c.32.164.74.164 1.581.164h.2c.84 0 1.26 0 1.581-.163a1.5 1.5 0 0 0 .656-.656c.163-.32.163-.74.163-1.581V5.4c0-.84 0-1.26-.163-1.581a1.5 1.5 0 0 0-.656-.656C8.861 3 8.441 3 7.6 3h-.2c-.84 0-1.26 0-1.581.163a1.5 1.5 0 0 0-.656.656zm9 0C14 4.139 14 4.559 14 5.4v13.2c0 .84 0 1.26.164 1.581a1.5 1.5 0 0 0 .655.655c.32.164.74.164 1.581.164h.2c.84 0 1.26 0 1.581-.163a1.5 1.5 0 0 0 .655-.656c.164-.32.164-.74.164-1.581V5.4c0-.84 0-1.26-.163-1.581a1.5 1.5 0 0 0-.656-.656C17.861 3 17.441 3 16.6 3h-.2c-.84 0-1.26 0-1.581.163a1.5 1.5 0 0 0-.655.656z'
-            )
-            updateTimer()
-    } else if (event.data == YT.PlayerState.PAUSED) {
-        document
-            .querySelector('#playSvg')
-            .setAttribute(
-                'd',
-                'M8.286 3.407A1.5 1.5 0 0 0 6 4.684v14.632a1.5 1.5 0 0 0 2.286 1.277l11.888-7.316a1.5 1.5 0 0 0 0-2.555L8.286 3.407z'
-            )
-    }
-
-    if (roomId) {
-        if (event.data == YT.PlayerState.ENDED) {
-            console.log('Video ended, playing next video in queue')
-            getQueue(roomId, (queue) => {
-                if (queue.length === 0) {
-                    videoLoaded = false
-                } else {
-                    console.log('Playing next video in queue ' + queue[0])
-                    embedYoutube(queue[0])
-                    removeFromQueue(roomId, queue[0])
-                }
-            })
-        } 
-    }
 }
 
 // Get URL from the search bar and create an iframe
@@ -228,13 +198,14 @@ function embedYoutube(textboxValue) {
     const convertedUrl =
         'https://www.youtube.com/embed/' +
         getID +
-        '?enablejsapi=1&autoplay=1&controls=0&playinfo=0&disablekb=1&rel=0'
+        '?&enablejsapi=1&autoplay=1&controls=0&playinfo=0&disablekb=1&rel=0'
     console.log('Embedding YouTube video with URL:', convertedUrl)
     iframe.width = '100%'
     iframe.height = '100%'
     iframe.src = convertedUrl
     iframe.frameBorder = 0
     iframe.allowFullscreen = true
+    iframe.style.pointerEvents = 'none'
     document.querySelector('#iframe').appendChild(iframe)
 
     // Initialize the YouTube Player
@@ -246,6 +217,8 @@ function embedYoutube(textboxValue) {
                 const duration = player.getDuration()
                 document.querySelector('#seekBar').max = duration
 
+                player.mute()
+
                 // Set video to play / pause
                 if(roomId) {
                     if(localState[roomId].isPlaying) {
@@ -256,27 +229,77 @@ function embedYoutube(textboxValue) {
 
                     // If its first time joining then mute (avoid autopause)
                     if(justJoined) {
-                        player.mute()
                         // Seek to video play time
                         getSyncInfo(roomId, (state) => {
                             console.log("welcome, seeking to: " + state.videoTime)
                             player.seekTo(state.videoTime, true)
-                    })
+                        })
                         justJoined = false
-                    } else {
-                        const prevVol = player.getVolume()
-                        player.mute()
-                        setTimeout(() => {
-                            player.setVolume(prevVol)
-                            console.log("prev vol set")
-                        }, 5000)
                     }
                 }
             },
             onStateChange: onPlayerStateChange,
+            'onAutoplayBlocked': onAutoplayBlocked
         },
     })
     videoLoaded = true
+}
+
+// YouTube player state change
+function onPlayerStateChange(event) {
+    // Global Media keys
+    if (event.data == YT.PlayerState.PLAYING) {
+        document
+            .querySelector('#playSvg')
+            .setAttribute(
+                'd',
+                'M5.163 3.819C5 4.139 5 4.559 5 5.4v13.2c0 .84 0 1.26.163 1.581a1.5 1.5 0 0 0 .656.655c.32.164.74.164 1.581.164h.2c.84 0 1.26 0 1.581-.163a1.5 1.5 0 0 0 .656-.656c.163-.32.163-.74.163-1.581V5.4c0-.84 0-1.26-.163-1.581a1.5 1.5 0 0 0-.656-.656C8.861 3 8.441 3 7.6 3h-.2c-.84 0-1.26 0-1.581.163a1.5 1.5 0 0 0-.656.656zm9 0C14 4.139 14 4.559 14 5.4v13.2c0 .84 0 1.26.164 1.581a1.5 1.5 0 0 0 .655.655c.32.164.74.164 1.581.164h.2c.84 0 1.26 0 1.581-.163a1.5 1.5 0 0 0 .655-.656c.164-.32.164-.74.164-1.581V5.4c0-.84 0-1.26-.163-1.581a1.5 1.5 0 0 0-.656-.656C17.861 3 17.441 3 16.6 3h-.2c-.84 0-1.26 0-1.581.163a1.5 1.5 0 0 0-.655.656z'
+            )
+            updateTimer()
+
+            if(autoPlayBlocked === true) {
+                document.querySelector('#iframe iframe').style.pointerEvents = 'none'
+                getSyncInfo(roomId, (state) => {
+                    player.seekTo(state.videoTime, true)
+                })
+                autoPlayBlocked = false
+            }
+
+    } else if (event.data == YT.PlayerState.PAUSED) {
+        document
+            .querySelector('#playSvg')
+            .setAttribute(
+                'd',
+                'M8.286 3.407A1.5 1.5 0 0 0 6 4.684v14.632a1.5 1.5 0 0 0 2.286 1.277l11.888-7.316a1.5 1.5 0 0 0 0-2.555L8.286 3.407z'
+        )
+
+        if(roomId && !serverPaused) {
+            getSyncInfo(roomId, (state) => {
+                player.playVideo()
+            })
+        }
+    }
+
+    if (roomId) {
+        if (event.data == YT.PlayerState.ENDED) {
+            console.log('Video ended, playing next video in queue')
+            getQueue(roomId, (queue) => {
+                if (queue.length === 0) {
+                    videoLoaded = false
+                } else {
+                    console.log('Playing next video in queue ' + queue[0])
+                    embedYoutube(queue[0])
+                    removeFromQueue(roomId, queue[0])
+                }
+            })
+        } 
+    }
+}
+
+function onAutoplayBlocked(event) {
+    autoPlayBlocked = true
+    console.log("Autoplay was blocked:", event);
+    document.querySelector('#iframe iframe').style.pointerEvents = 'auto'
 }
 
 function isYTLink(url) {
