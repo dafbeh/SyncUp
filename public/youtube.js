@@ -3,10 +3,10 @@ let roomId = null
 let player
 let videoLoaded = false
 let justJoined = true
+let canSeek = true
 let isSeeking = false
 let queue = []
 let localState = []
-let serverPaused = false
 let autoPlayBlocked = false
 
 // On page load
@@ -70,11 +70,6 @@ function connectToRoom(room) {
             case 'pause':
                 if (player && player.pauseVideo) {
                     player.pauseVideo()
-
-                    serverPaused = true
-                    setTimeout(() => {
-                        serverPaused = false
-                    }, 1000)
 
                     getSyncInfo(roomId, (state) => {
                         player.seekTo(state.videoTime, true)
@@ -159,7 +154,7 @@ function handleQueue(value) {
         return
     }
 
-    if (!videoLoaded && isYTLink(value)) {
+    if (!videoLoaded && queue.length >= 0 && isYTLink(value)) {
         socket.emit('videoUrl', { room: roomId, videoUrl: value })
     } else if (videoLoaded && isYTLink(value)) {
         addToQueue(roomId, value)
@@ -217,7 +212,7 @@ function embedYoutube(textboxValue) {
                 const duration = player.getDuration()
                 document.querySelector('#seekBar').max = duration
 
-                player.mute()
+                player.setVolume( document.querySelector('#volumeR').value);
 
                 // Set video to play / pause
                 if(roomId) {
@@ -232,6 +227,7 @@ function embedYoutube(textboxValue) {
                         // Seek to video play time
                         getSyncInfo(roomId, (state) => {
                             console.log("welcome, seeking to: " + state.videoTime)
+                            player.mute()
                             player.seekTo(state.videoTime, true)
                         })
                         justJoined = false
@@ -256,9 +252,10 @@ function onPlayerStateChange(event) {
                 'M5.163 3.819C5 4.139 5 4.559 5 5.4v13.2c0 .84 0 1.26.163 1.581a1.5 1.5 0 0 0 .656.655c.32.164.74.164 1.581.164h.2c.84 0 1.26 0 1.581-.163a1.5 1.5 0 0 0 .656-.656c.163-.32.163-.74.163-1.581V5.4c0-.84 0-1.26-.163-1.581a1.5 1.5 0 0 0-.656-.656C8.861 3 8.441 3 7.6 3h-.2c-.84 0-1.26 0-1.581.163a1.5 1.5 0 0 0-.656.656zm9 0C14 4.139 14 4.559 14 5.4v13.2c0 .84 0 1.26.164 1.581a1.5 1.5 0 0 0 .655.655c.32.164.74.164 1.581.164h.2c.84 0 1.26 0 1.581-.163a1.5 1.5 0 0 0 .655-.656c.164-.32.164-.74.164-1.581V5.4c0-.84 0-1.26-.163-1.581a1.5 1.5 0 0 0-.656-.656C17.861 3 17.441 3 16.6 3h-.2c-.84 0-1.26 0-1.581.163a1.5 1.5 0 0 0-.655.656z'
             )
             updateTimer()
+            canSeek = true
+            document.querySelector('#iframe iframe').style.pointerEvents = 'none'
 
             if(autoPlayBlocked === true) {
-                document.querySelector('#iframe iframe').style.pointerEvents = 'none'
                 getSyncInfo(roomId, (state) => {
                     player.seekTo(state.videoTime, true)
                 })
@@ -273,11 +270,15 @@ function onPlayerStateChange(event) {
                 'M8.286 3.407A1.5 1.5 0 0 0 6 4.684v14.632a1.5 1.5 0 0 0 2.286 1.277l11.888-7.316a1.5 1.5 0 0 0 0-2.555L8.286 3.407z'
         )
 
-        if(roomId && !serverPaused) {
-            getSyncInfo(roomId, (state) => {
-                player.playVideo()
-            })
-        }
+        getRoomState(roomId, (state) => {
+            const isPlaying = state.isPlaying
+            
+            if(isPlaying) {
+                canSeek = false;
+                callAlert("Your browser has blocked autoplay! Click the video to continue")
+                document.querySelector('#iframe iframe').style.pointerEvents = 'auto'
+            }
+        })
     }
 
     if (roomId) {

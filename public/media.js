@@ -33,12 +33,16 @@ document.querySelector('#play').onclick = function () {
                     player.playVideo()
                 });
             } else {
-                console.log('Video paused, emitting pause event')
-                socket.emit('videoAction', {
-                    room: roomId,
-                    action: 'pause',
-                    time: player.getCurrentTime(),
-                })
+                if(canSeek) {
+                    console.log('Video paused, emitting pause event')
+                    socket.emit('videoAction', {
+                        room: roomId,
+                        action: 'pause',
+                        time: player.getCurrentTime(),
+                    })
+                } else {
+                    player.pauseVideo()
+                }
             }
         } else {
             if(playerState === YT.PlayerState.PLAYING) {
@@ -65,7 +69,7 @@ document.querySelector('#seekBar').addEventListener('input', (event) => {
         return
     }
 
-    if (player) {
+    if (player && canSeek) {
         socket.emit('videoAction', {
             room: roomId,
             action: 'seek',
@@ -287,5 +291,44 @@ function loadQualityOptions() {
 }
 
 function callAlert(text) {
-    
+    const alert = document.getElementById('alertBox');
+    const exitBtn = document.getElementById('closeAlert');
+    const alertTxt = document.getElementById('alertTxt');
+
+    // When alert is called
+    if(alert.classList.contains('hidden')) {
+        alert.classList.remove('hidden');
+        alertTxt.innerText = text;
+        startAnimation()
+
+        // When exit is pressed
+        exitBtn.addEventListener('click', () => {
+            endAnimation()
+            clearTimeout(closeTimeout)
+        }, {once : true});
+
+        // Auto close alert
+        closeTimeout = setTimeout(() => {
+            endAnimation()
+        }, 10000)
+    }
+
+    // Animations + Closing handling
+    function startAnimation() {
+        setTimeout(() => {
+            alert.classList.remove("translate-x-full");
+            alert.classList.add("translate-x-0");
+        }, 1);
+    }
+
+    function endAnimation() {
+        alert.classList.add("translate-y-full");
+        setTimeout(() => {
+            alert.classList.add("translate-x-full");
+            alert.classList.remove("translate-x-0");
+            alert.classList.remove("translate-y-full");
+
+            alert.classList.add("hidden");
+        }, 100);
+    }
 }

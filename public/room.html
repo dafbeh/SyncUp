@@ -106,6 +106,21 @@
         </div>
     </div>
 
+    <div id="alertBox" class="hidden transform translate-x-full transition-transform duration-300 ease-in-out
+            flex items-center fixed bottom-2 right-2 bg-gray-300 dark:bg-neutral-300 max-w-xl h-12 rounded-r-lg rounded-l-xl shadow-lg">
+        <div id="alertType" class="flex justify-center items-center bg-red-500 mr-2 h-full w-12 rounded-l-lg">
+            <img src="images/alerts/error.svg" class="h-8 p-1 invert" alt="closeAlertSvg" draggable="false"/>
+        </div>
+
+        <p id="alertTxt" class="font-semibold font-sans pl-2 pr-1">
+            empty error
+        </p>
+
+        <button id="closeAlert" class="flex items-center justify-center rounded-r-lg justify-center h-full">
+            <img src="images/alerts/closeAlert.svg" class="h-10 w-10 transition-all duration-200 ease-in-out hover:scale-110" alt="closeAlertSvg" draggable="false"/>
+        </button>
+    </div>
+
     <script src="/socket.io/socket.io.js"></script>
     <script src="https://www.youtube.com/iframe_api"></script>
     <script src="youtube.js"></script>
