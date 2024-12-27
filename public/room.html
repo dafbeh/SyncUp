@@ -11,7 +11,7 @@
 
 <body class="h-screen bg-[#d2d3db] flex flex-col dark:bg-[#0f0f0f]">
     <div id="topBar" class="bg-[#d2d3db] flex justify-between items-center h-12 w-full dark:bg-[#0f0f0f]">
-        <div id="rightSide" class="flex">
+        <div class="flex">
             <img id="logo" class="w-12 h-12 dark:invert cursor-pointer" alt="SyncUp" src="images/logo.svg" draggable="false"
                 onclick="window.location.href='/'">
             <h1 class="text-black dark:text-white font-bold text-3xl my-1 ml-2 font-mono">SyncUp</h1>
@@ -51,7 +51,7 @@
                 <div id="iframe" class="w-full h-full">
             </div>
         </div>
-            <div id="queueContainer" class="overflow-y-auto h-full 4xl:w-96 sm:w-64 bg-gray-900 dark:bg-black rounded-lg px-2">
+            <div id="queueContainer" class="hidden sm:block overflow-y-auto h-full 4xl:w-96 sm:w-64 bg-gray-900 dark:bg-black rounded-lg px-2">
                 <h2 id="boxText" class="text-white font-bold text-2xl p-2 font-sans">Queue</h2>
             </div>
         </div>
@@ -103,6 +103,12 @@
                 </div>
             </div>
             <h1 id="videoTitleText" class="text-black dark:text-white text-lg sm:text-xl font-semibold text-center">{Video Title}</h1>
+        </div>
+    </div>
+
+    <div class="w-full h-full flex justify-center">
+        <div id="queueContainer" class="sm:hidden overflow-y-auto w-3/4 h-5/6 mt-5 bg-gray-900 dark:bg-black rounded-lg px-2">
+            <h2 id="boxText" class="text-white font-bold text-2xl p-2 font-sans">Queue</h2>
         </div>
     </div>
 
