@@ -47,7 +47,7 @@
   }
 }
 
-body {
+#body {
   overflow: hidden;
   animation: unhide 0s 1s forwards;
 }
@@ -58,6 +58,14 @@ body {
 
 #rightSide {
   animation: fade-up 1s 0.1s ease-in-out;
+}
+
+#downArrow {
+  animation: fade-down 1s 0.1s ease-in-out;
+}
+
+#topBar {
+  animation: fade-down 1s 0.4s backwards;
 }
 
 #horizontalSpacer {
@@ -80,15 +88,6 @@ body {
 
 #account:hover {
   transform: scale(1.1);
-}
-
-#newRoom {
-  transition: transform 0.3s ease;
-  animation: fade-right 0.5s 0.4s backwards;
-}
-
-#newRoom:hover {
-  transform: scale(1.05);
 }
 
 /* Search Section */

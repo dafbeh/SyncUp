@@ -290,6 +290,18 @@ function loadQualityOptions() {
     }
 }
 
+function resetControls() {
+    const seek = document.querySelector('#seekBar')
+    const time = document.querySelector('#time')
+    const videoTitle = document.querySelector('#videoTitleText')
+
+    console.log("reset controls")
+
+    seek.value = 0
+    time.textContent = "00:00"
+    videoTitle.textContent = ""
+}
+
 function callAlert(text) {
     const alert = document.getElementById('alertBox');
     const exitBtn = document.getElementById('closeAlert');

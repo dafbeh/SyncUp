@@ -11,7 +11,6 @@ const PORT = process.env.PORT || 3000
 
 // Store the information about the rooms
 const validRooms = new Set()
-const roomQueue = {}
 const roomLeader = {}
 const roomUserList = {}
 const roomStates = {}
@@ -28,13 +27,12 @@ app.get('/new-room', (req, res) => {
     const roomId = uuidv4()
     validRooms.add(roomId)
     roomUserList[roomId] = []
-    roomQueue[roomId] = []
     roomStates[roomId] = {
         isPlaying: true,
         videoTime: 0,
-        lastEvent: Date.now(),
+        lastEvent: 0,
         currentVideo: '',
-        roomQueue: roomQueue[roomId],
+        roomQueue: [],
     }
     res.redirect(`/${roomId}`)
 })
@@ -87,7 +85,6 @@ io.on('connection', (socket) => {
 
             if (roomUserList[room].length === 0) {
                 validRooms.delete(room)
-                delete roomQueue[room]
                 delete roomLeader[room]
                 delete roomUserList[room]
                 delete roomStates[room]
@@ -104,6 +101,7 @@ io.on('connection', (socket) => {
         if (validRooms.has(room)) {
             io.to(room).emit('videoUrl', videoUrl)
             roomStates[room].currentVideo = videoUrl
+            roomStates[room].lastEvent = Date.now()
         }
     })
 
@@ -141,6 +139,7 @@ io.on('connection', (socket) => {
         const room = roomStates[roomId]
         const timePassed = (Date.now() - room.lastEvent) / 1000;
 
+
         console.log("current video time: " + timePassed)
 
         if(room.isPlaying) {
@@ -148,7 +147,7 @@ io.on('connection', (socket) => {
                 videoTime: room.videoTime + timePassed,
                 isPlaying: true
             }
-        } else {
+        } else if(!room.isPlaying) {
             return {
                 videoTime: room.videoTime,
                 isPlaying: false
@@ -172,26 +171,28 @@ io.on('connection', (socket) => {
     socket.on('addToQueue', (data) => {
         const { room, videoId } = data
         if (validRooms.has(room)) {
-            roomQueue[room].push(videoId)
+            roomStates[room].roomQueue.push(videoId)
             io.to(room).emit('addToQueue', videoId)
+            console.log("queue updated: " + roomStates[room].roomQueue)
         }
     })
 
     socket.on('getQueue', (room) => {
         if (validRooms.has(room)) {
-            socket.emit('queueData', roomQueue[room] || [])
+            socket.emit('queueData', roomStates[room].roomQueue || [])
         }
     })
 
     socket.on('removeFromQueue', (data) => {
         const { room, url } = data
         if (validRooms.has(room)) {
-            const queue = roomQueue[room]
+            const queue = roomStates[room].roomQueue
             const index = queue.findIndex((item) => item.url === url)
             if (index !== 0) {
                 console.log("removing.... thumbnail " + url);
                 queue.splice(index, 1)
                 io.to(room).emit('removeFromQueue', { queue, url })
+                console.log("queue updated: " + roomStates[room].roomQueue)
             }
         }
     })

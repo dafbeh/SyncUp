@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 
-<body class="h-screen bg-[#d2d3db] flex flex-col dark:bg-[#0f0f0f]">
+<body id="body" class="h-screen bg-[#d2d3db] flex flex-col dark:bg-[#0f0f0f]">
     <div id="topBar" class="bg-[#d2d3db] flex justify-between items-center h-12 w-full dark:bg-[#0f0f0f]">
         <div class="flex">
             <img id="logo" class="w-12 h-12 dark:invert cursor-pointer" alt="SyncUp" src="images/logo.svg" draggable="false"
@@ -24,10 +24,6 @@
         </div>
     </div>
     <div id="horizontalSpacer" class="border-t-2 border-gray-500 w-full dark:border-white dark:border-t-1"></div>
-
-    <button id="newRoom"
-        class="shadow-lg m-1 mt-1 mb-4 p-3 w-32 dark:bg-gray-200 bg-gray-300 rounded-lg font-semibold hover:bg-gray-400 dark:hover:bg-gray-300"
-        onclick="window.location.href='/new-room'">Create Room</button>
 
     <div id="videoContainer" class="flex flex-col items-center space-y-4 mt-16">
         <div id="searchSection" class="flex justify-center w-full">

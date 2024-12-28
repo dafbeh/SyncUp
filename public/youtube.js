@@ -3,7 +3,7 @@ let roomId = null
 let player
 let videoLoaded = false
 let justJoined = true
-let canSeek = true
+let canSeek = false
 let isSeeking = false
 let queue = []
 let localState = []
@@ -12,14 +12,11 @@ let autoPlayBlocked = false
 // On page load
 document.addEventListener('DOMContentLoaded', () => {
     roomId = window.location.pathname.split('/')[1]
-    const newRoom = document.querySelector('#newRoom')
 
     if (roomId) {
         connectToRoom(roomId)
-        newRoom.style.display = 'none'
     } else {
         initializeSearch()
-        newRoom.style.display = 'inline-block'
     }
 })
 
@@ -158,6 +155,8 @@ function handleQueue(value) {
         socket.emit('videoUrl', { room: roomId, videoUrl: value })
     } else if (videoLoaded && isYTLink(value)) {
         addToQueue(roomId, value)
+    } else {
+        callAlert("Invalid YouTube URL, please try again")
     }
 }
 
@@ -168,23 +167,6 @@ function embedYoutube(textboxValue) {
 
     if (existingIframe) {
         existingIframe.remove()
-    }
-
-    if (
-        !textboxValue.includes('youtube.com') &&
-        !textboxValue.includes('youtu.be')
-    ) {
-        console.log('Invalid YouTube URL')
-        const waitingElement = document.querySelector('#waiting')
-        waitingElement.textContent = 'Invalid URL'
-        waitingElement.style.color = 'red'
-        videoTitle.textContent = ''
-
-        setTimeout(() => {
-            waitingElement.textContent = '...'
-            waitingElement.style.color = 'white'
-        }, 3000)
-        return
     }
 
     document.getElementById('waiting').innerText = ''
@@ -198,7 +180,6 @@ function embedYoutube(textboxValue) {
     iframe.width = '100%'
     iframe.height = '100%'
     iframe.src = convertedUrl
-    iframe.frameBorder = 0
     iframe.allowFullscreen = true
     iframe.style.pointerEvents = 'none'
     document.querySelector('#iframe').appendChild(iframe)
@@ -275,8 +256,13 @@ function onPlayerStateChange(event) {
             
             if(isPlaying) {
                 canSeek = false;
-                callAlert("Your browser has blocked autoplay! Click the video to continue")
+                autoPlayBlocked = true
                 document.querySelector('#iframe iframe').style.pointerEvents = 'auto'
+                setTimeout(() => {
+                    if(isPlaying) {
+                        callAlert("Your browser has blocked autoplay! Click the video to continue")
+                    }
+                }, 250)
             }
         })
     }
@@ -287,6 +273,8 @@ function onPlayerStateChange(event) {
             getQueue(roomId, (queue) => {
                 if (queue.length === 0) {
                     videoLoaded = false
+                    resetControls()
+                    document.querySelector('#iframe iframe').remove()
                 } else {
                     console.log('Playing next video in queue ' + queue[0])
                     embedYoutube(queue[0])
@@ -369,7 +357,7 @@ function getSyncInfo(roomId, callback) {
     socket.emit('getSyncInfo', roomId);
 
     socket.once('syncInfo', (state) => {
-        callback(state);
+            callback(state);
     });
 }
 
