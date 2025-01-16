@@ -184,12 +184,13 @@ io.on('connection', (socket) => {
 
     socket.on('removeFromQueue', (data) => {
         const { room, url } = data
+
         if (validRooms.has(room)) {
             const queue = roomStates[room].roomQueue
-            const index = queue.findIndex((item) => item.url === url)
-            if (index !== 0) {
+
+            if (roomStates[room].roomQueue.length > 0) {
                 console.log("removing.... thumbnail " + url);
-                queue.splice(index, 1)
+                roomStates[room].roomQueue.pop()
                 io.to(room).emit('removeFromQueue', { queue, url })
                 console.log("queue updated: " + roomStates[room].roomQueue)
             }
@@ -208,7 +209,7 @@ io.on('connection', (socket) => {
         const { room, url } = data;
         if (validRooms.has(room)) {
             console.log(url + " has ended...");
-            if(roomStates[room].roomQueue.length <= 0) {
+            if(roomStates[room].roomQueue.length === 0 && socket.id === roomLeader[room]) {
                 roomStates[room].currentVideo = ''
                 console.log("current video wiped, now playing: " + roomStates[room].currentVideo)
             }

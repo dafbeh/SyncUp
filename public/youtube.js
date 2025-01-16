@@ -106,19 +106,15 @@ function connectToRoom(room) {
 
     socket.on(`removeFromQueue`, ({ queue, url }) => {
         const thumbnail = document.querySelector(`[data-id="${url}"]`);
-        console.log('Removing URL from queue: ', url);
+        queue.pop();
     
         if (thumbnail) {
-            const index = queue.indexOf(url);
-            if (index !== -1) {
-                queue.splice(index, 1);
-            }
-    
-            socket.emit('updateQueue', { room: roomId, queue });
-    
             thumbnail.remove();
+        } else {
+            console.log("No thumbnail found!")
         }
-    
+
+        socket.emit('updateQueue', { room: roomId, queue });
         console.log('Updated queue after removal:', queue);
     });
 
@@ -190,6 +186,7 @@ function embedYoutube(textboxValue) {
     player = new YT.Player(iframe, {
         events: {
             onReady: function (event) {
+                player.mute()
                 const title = event.target.getVideoData().title
                 videoTitle.textContent = title
                 const duration = player.getDuration()
@@ -209,11 +206,12 @@ function embedYoutube(textboxValue) {
                     if(justJoined) {
                         // Seek to video play time
                         getSyncInfo(roomId, (state) => {
-                            console.log("justJoined, seeking to: " + state.videoTime)
-                            player.mute()
+                            const seekTime = state.videoTime
+                            console.log("justJoined, seeking to: " + seekTime)
+                            console.log("video length: " + player.getDuration() + " supposed time: " + seekTime)
 
-                            if(player.getCurrentTime() <= state.videoTime) {
-                                player.seekTo(state.videoTime, true)
+                            if(player.getDuration() >= seekTime) {
+                                player.seekTo(seekTime, true)
                             } else {
                                 console.log("Seek time is greater than video length, likely error!")
                             }
@@ -292,7 +290,9 @@ function onPlayerStateChange(event) {
                 } else {
                     console.log('Playing next video in queue ' + queue[0])
                     embedYoutube(queue[0])
-                    removeFromQueue(roomId, queue[0])
+                    if (isLeader) {
+                        removeFromQueue(roomId, queue[0])
+                    }
                 }
             })
         } 
