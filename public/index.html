@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div id="welcome" class="h-screen bg-[#d2d3db] flex flex-col dark:bg-[#0f0f0f]">
+    <div id="welcome" class="h-screen bg-[#d2d3db] select-none pt-12 flex flex-col dark:bg-[#0f0f0f]">
         <div class="sm:flex w-full h-5/6">
             <div id="leftSide" class="sm:w-1/2 w-screen flex sm:justify-end justify-center items-center">
                 <img id="bigLogo" alt="sync up logo" class="sm:w-[700px] h-1/4 sm:h-[700px] h-1/4 dark:invert" src="images/logo.svg" draggable="false"> 
@@ -24,14 +24,14 @@
         </div>
 
         <div id="downArrow" class="flex justify-center">
-            <img alt="arrow" class="w-32 h-32 mt-32 dark:invert cursor-pointer" 
+            <img alt="arrow" class="w-32 h-32 mt-22 dark:invert cursor-pointer" 
                 onClick="window.scrollTo({left:0, top:document.body.scrollHeight, behavior:'smooth'})" 
                 src="images/arrow.svg" draggable="false">
         </div>
 
     </div>
 
-    <div class="h-screen bg-gray-200">
+    <div class="h-screen bg-white">
         <div class="flex justify-center">
             <h1 class="text-4xl font-bold font-sans p-4">How to use SyncUp:</h1>
         </div>

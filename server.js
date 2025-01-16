@@ -139,7 +139,6 @@ io.on('connection', (socket) => {
         const room = roomStates[roomId]
         const timePassed = (Date.now() - room.lastEvent) / 1000;
 
-
         console.log("current video time: " + timePassed)
 
         if(room.isPlaying) {
@@ -200,7 +199,19 @@ io.on('connection', (socket) => {
     socket.on('getRoomLeader', (room) => {
         if (validRooms.has(room)) {
             const leader = roomLeader[room]
+            console.log(leader)
             socket.emit('roomLeader', leader)
         }
     })
+
+    socket.on('videoEnded', (data) => {
+        const { room, url } = data;
+        if (validRooms.has(room)) {
+            console.log(url + " has ended...");
+            if(roomStates[room].roomQueue.length <= 0) {
+                roomStates[room].currentVideo = ''
+                console.log("current video wiped, now playing: " + roomStates[room].currentVideo)
+            }
+        }
+    });
 })

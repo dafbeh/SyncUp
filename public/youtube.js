@@ -1,6 +1,7 @@
 let socket = null
 let roomId = null
 let player
+let isLeader = false
 let videoLoaded = false
 let justJoined = true
 let canSeek = false
@@ -31,6 +32,13 @@ function connectToRoom(room) {
         console.log('Connected to WebSocket server for room: ' + room)
         socket.emit('joinRoom', room)
 
+        getLeader(roomId, (state) => {
+            if(socket.id === state) {
+                isLeader = true;
+                console.log("You are the room leader!")
+            }
+        })
+
         getRoomState(roomId, (state) => {
             localState[roomId] = state
             const currentVideo = state.currentVideo
@@ -45,6 +53,7 @@ function connectToRoom(room) {
 
             if (currentVideo) {
                 embedYoutube(currentVideo)
+                console.log("embedding: " + currentVideo)
             }
         })
     })
@@ -100,25 +109,18 @@ function connectToRoom(room) {
         console.log('Removing URL from queue: ', url);
     
         if (thumbnail) {
-            // Remove the first occurrence of the URL from the queue
-            const index = queue.indexOf(url); // Find the index of the first occurrence
+            const index = queue.indexOf(url);
             if (index !== -1) {
-                queue.splice(index, 1); // Remove that one element from the array
+                queue.splice(index, 1);
             }
     
-            // Emit the updated queue to the server
             socket.emit('updateQueue', { room: roomId, queue });
     
-            // Remove the thumbnail from the DOM
             thumbnail.remove();
         }
     
         console.log('Updated queue after removal:', queue);
-    });    
-
-    socket.on('roomLeader', (leader) => {
-        console.log(leader)
-    })
+    });
 
     initializeSearch()
 }
@@ -207,9 +209,14 @@ function embedYoutube(textboxValue) {
                     if(justJoined) {
                         // Seek to video play time
                         getSyncInfo(roomId, (state) => {
-                            console.log("welcome, seeking to: " + state.videoTime)
+                            console.log("justJoined, seeking to: " + state.videoTime)
                             player.mute()
-                            player.seekTo(state.videoTime, true)
+
+                            if(player.getCurrentTime() <= state.videoTime) {
+                                player.seekTo(state.videoTime, true)
+                            } else {
+                                console.log("Seek time is greater than video length, likely error!")
+                            }
                         })
                         justJoined = false
                     }
@@ -270,6 +277,13 @@ function onPlayerStateChange(event) {
     if (roomId) {
         if (event.data == YT.PlayerState.ENDED) {
             console.log('Video ended, playing next video in queue')
+
+            if(isLeader) {
+                const url = player.getVideoUrl();
+                const room = roomId;
+                socket.emit('videoEnded', { room, url });
+            }
+
             getQueue(roomId, (queue) => {
                 if (queue.length === 0) {
                     videoLoaded = false
@@ -345,6 +359,14 @@ function createThumbnail(url) {
 }
 
 /* Getters and Setters */
+function getLeader(roomId, callback) {
+    socket.emit('getRoomLeader', roomId);
+
+    socket.once('roomLeader', (state) => {
+            callback(state);
+    });
+}
+
 function getRoomState(roomId, callback) {
     socket.emit('getRoomState', roomId);
 
