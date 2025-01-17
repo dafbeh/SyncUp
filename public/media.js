@@ -95,18 +95,15 @@ function updateTimer() {
     }, 500)
 }
 
-if(roomId) {
-    // Queue container resize
-    window.addEventListener('resize', adjustQueueContainerHeight);
-    window.addEventListener('load', adjustQueueContainerHeight);
+// Queue container resize
+window.addEventListener('resize', changeQueueSize);
+window.addEventListener('load', changeQueueSize);
 
-    function adjustQueueContainerHeight() {
-        const videoBox = document.getElementById('videoBox');
-        const queueContainer = document.getElementById('queueContainer');
-        const videoBoxHeight = videoBox.offsetHeight;
-
-        queueContainer.style.maxHeight = videoBoxHeight + 'px';
-    }
+function changeQueueSize() {
+    const videoBox = document.getElementById('videoBox');
+    const queueContainer = document.getElementById('queueContainer');
+    const videoBoxHeight = videoBox.offsetHeight;
+    queueContainer.style.maxHeight = videoBoxHeight + 'px';
 }
 
 // Calculates how much time left on video
@@ -343,4 +340,27 @@ function callAlert(text) {
             alert.classList.add("hidden");
         }, 100);
     }
+}
+
+function loadPlaylist() {
+    const videoLinks = [
+        "https://www.youtube.com/watch?v=CGj85pVzRJs",
+        "https://www.youtube.com/watch?v=KQetemT1sWc",
+        "https://www.youtube.com/watch?v=mBqqeqcJM_0",
+        "https://www.youtube.com/watch?v=TQemQRL_YVQ",
+        "https://www.youtube.com/watch?v=Man4Xw8Xypo",
+        "https://www.youtube.com/watch?v=oxwAB3SECtc"
+    ];
+
+    function addLink(index) {
+        if (index >= videoLinks.length) return;
+
+        handleQueue(videoLinks[index]);
+
+        setTimeout(() => {
+            addLink(index + 1);
+        }, 250);
+    }
+
+    addLink(0);
 }

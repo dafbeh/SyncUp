@@ -100,13 +100,15 @@ function connectToRoom(room) {
         createThumbnail(videoId)
     })
 
-    socket.on('queueData', (queue) => {
-        console.log('Queue updated:', queue)
+    socket.on('queueData', (updatedQueue) => {
+        console.log('Queue updated:', updatedQueue)
+        queue = updatedQueue;
+        renderQueue(queue);
     })
 
     socket.on(`removeFromQueue`, ({ queue, url }) => {
         const thumbnail = document.querySelector(`[data-id="${url}"]`);
-        queue.pop();
+        queue.shift();
     
         if (thumbnail) {
             thumbnail.remove();
@@ -186,7 +188,6 @@ function embedYoutube(textboxValue) {
     player = new YT.Player(iframe, {
         events: {
             onReady: function (event) {
-                player.mute()
                 const title = event.target.getVideoData().title
                 videoTitle.textContent = title
                 const duration = player.getDuration()
@@ -209,6 +210,8 @@ function embedYoutube(textboxValue) {
                             const seekTime = state.videoTime
                             console.log("justJoined, seeking to: " + seekTime)
                             console.log("video length: " + player.getDuration() + " supposed time: " + seekTime)
+
+                            player.mute()
 
                             if(player.getDuration() >= seekTime) {
                                 player.seekTo(seekTime, true)
@@ -243,6 +246,7 @@ function onPlayerStateChange(event) {
 
             if(autoPlayBlocked === true) {
                 getSyncInfo(roomId, (state) => {
+                    console.log("auto play seek to: " + state.videoTime)
                     player.seekTo(state.videoTime, true)
                 })
                 autoPlayBlocked = false
@@ -274,27 +278,30 @@ function onPlayerStateChange(event) {
 
     if (roomId) {
         if (event.data == YT.PlayerState.ENDED) {
-            console.log('Video ended, playing next video in queue')
+            if(canSeek) {
+                console.log('Video ended, playing next video in queue')
 
-            if(isLeader) {
-                const url = player.getVideoUrl();
-                const room = roomId;
-                socket.emit('videoEnded', { room, url });
-            }
-
-            getQueue(roomId, (queue) => {
-                if (queue.length === 0) {
-                    videoLoaded = false
-                    resetControls()
-                    document.querySelector('#iframe iframe').remove()
-                } else {
-                    console.log('Playing next video in queue ' + queue[0])
-                    embedYoutube(queue[0])
-                    if (isLeader) {
-                        removeFromQueue(roomId, queue[0])
-                    }
+                if(isLeader) {
+                    const url = player.getVideoUrl();
+                    const room = roomId;
+                    socket.emit('videoEnded', { room, url });
                 }
-            })
+
+                getQueue(roomId, (queue) => {
+                    if (queue.length === 0) {
+                        videoLoaded = false
+                        resetControls()
+                        console.log("removing embed")
+                        document.querySelector('#iframe iframe').remove()
+                    } else {
+                        console.log('Playing next video in queue ' + queue[0])
+                        embedYoutube(queue[0])
+                        if (isLeader) {
+                            removeFromQueue(roomId, queue[0])
+                        }
+                    }
+                })
+            }
         } 
     }
 }
@@ -322,12 +329,23 @@ function convertUrl(oldUrl) {
     return null
 }
 
+function renderQueue(queue) {
+    const queueContainer = document.querySelector('#queueContainer');
+    queueContainer.innerHTML = '';
+
+    queue.forEach((videoUrl) => {
+        createThumbnail(videoUrl);
+    });
+}
+
+
 // Add thumbnail
 function createThumbnail(url) {
     const videoId = convertUrl(url);
     const thumbnailUrl = "https://img.youtube.com/vi/" + videoId + "/hqdefault.jpg";
 
     const queueContainer = document.querySelector('#queueContainer');
+    const mQueueContainer = document.querySelector('#mQueueContainer');
 
     const thumbnail = document.createElement('div');
     thumbnail.className = url + ' w-full border mx-auto aspect-video rounded-lg relative mb-2';
@@ -355,7 +373,9 @@ function createThumbnail(url) {
 
     thumbnailSettings.appendChild(exitThumbnail);
     thumbnail.appendChild(thumbnailSettings);
-    queueContainer.appendChild(thumbnail);
+
+    queueContainer.appendChild(thumbnail.cloneNode(true))
+    mQueueContainer.appendChild(thumbnail);
 }
 
 /* Getters and Setters */

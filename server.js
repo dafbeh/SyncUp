@@ -30,7 +30,7 @@ app.get('/new-room', (req, res) => {
     roomStates[roomId] = {
         isPlaying: true,
         videoTime: 0,
-        lastEvent: 0,
+        lastEvent: Date.now(),
         currentVideo: '',
         roomQueue: [],
     }
@@ -139,11 +139,11 @@ io.on('connection', (socket) => {
         const room = roomStates[roomId]
         const timePassed = (Date.now() - room.lastEvent) / 1000;
 
-        console.log("current video time: " + timePassed)
+        console.log("current video time: " + room.videoTime)
 
         if(room.isPlaying) {
             return {
-                videoTime: room.videoTime + timePassed,
+                videoTime: (room.videoTime + timePassed),
                 isPlaying: true
             }
         } else if(!room.isPlaying) {
@@ -188,9 +188,9 @@ io.on('connection', (socket) => {
         if (validRooms.has(room)) {
             const queue = roomStates[room].roomQueue
 
-            if (roomStates[room].roomQueue.length > 0) {
+            if (roomStates[room].roomQueue.length >= 0) {
                 console.log("removing.... thumbnail " + url);
-                roomStates[room].roomQueue.pop()
+                roomStates[room].roomQueue.shift()
                 io.to(room).emit('removeFromQueue', { queue, url })
                 console.log("queue updated: " + roomStates[room].roomQueue)
             }
@@ -200,7 +200,6 @@ io.on('connection', (socket) => {
     socket.on('getRoomLeader', (room) => {
         if (validRooms.has(room)) {
             const leader = roomLeader[room]
-            console.log(leader)
             socket.emit('roomLeader', leader)
         }
     })
@@ -211,6 +210,8 @@ io.on('connection', (socket) => {
             console.log(url + " has ended...");
             if(roomStates[room].roomQueue.length === 0 && socket.id === roomLeader[room]) {
                 roomStates[room].currentVideo = ''
+                roomStates[room].lastEvent = 0
+                roomStates[room].videoTime = 0
                 console.log("current video wiped, now playing: " + roomStates[room].currentVideo)
             }
         }

@@ -25,6 +25,10 @@
     </div>
     <div id="horizontalSpacer" class="border-t-2 border-gray-500 w-full dark:border-white dark:border-t-1"></div>
 
+    <button class="absolute mt-14 ml-1 bg-white p-3 rounded-lg" onclick="loadPlaylist()">
+        Load Playlist
+    </button>
+
     <div id="videoContainer" class="flex flex-col items-center space-y-4 mt-16">
         <div id="searchSection" class="flex justify-center w-full">
             <div id="searchContainer"
@@ -103,7 +107,7 @@
     </div>
 
     <div class="w-full h-full flex justify-center">
-        <div id="queueContainer" class="sm:hidden overflow-y-auto w-3/4 h-5/6 mt-5 bg-gray-900 dark:bg-black rounded-lg px-2">
+        <div id="mQueueContainer" class="sm:hidden overflow-y-auto w-3/4 h-5/6 max-h-96 mt-5 bg-gray-900 dark:bg-black rounded-lg px-2">
             <h2 id="boxText" class="text-white font-bold text-2xl p-2 font-sans">Queue</h2>
         </div>
     </div>
