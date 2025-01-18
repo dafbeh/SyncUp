@@ -6,8 +6,8 @@ let videoLoaded = false
 let justJoined = true
 let canSeek = false
 let isSeeking = false
-let queue = []
 let localState = []
+let queue = []
 let autoPlayBlocked = false
 
 // On page load
@@ -43,25 +43,23 @@ function connectToRoom(room) {
             localState[roomId] = state
             const currentVideo = state.currentVideo
             queue = state.roomQueue
-            
-            if (queue.length > 0) {
-                for (let i in queue) {
-                    createThumbnail(queue[i]);
-                    console.log("added: " + queue[i])
-                }
-            }
 
             if (currentVideo) {
                 embedYoutube(currentVideo)
                 console.log("embedding: " + currentVideo)
             }
+
+            if (queue.length > 0) {
+                renderQueue(queue)
+            }
         })
     })
 
     // Catch URL from server
-    socket.on('videoUrl', (textboxValue) => {
-        loadedVideoUrl = textboxValue
-        embedYoutube(textboxValue)
+    socket.on('videoUrl', (url) => {
+        canSeek = false
+        loadedVideoUrl = url
+        embedYoutube(url)
     })
 
     // When a video action event is received
@@ -95,30 +93,26 @@ function connectToRoom(room) {
         console.log('Received video state from server:', state)
     })
 
-    socket.on('addToQueue', (videoId) => {
-        console.log('Creating thumbnail for: ', videoId)
-        createThumbnail(videoId)
-    })
+    socket.on('removeEmbed', () => {
+        const existingIframe = document.querySelector('#iframe iframe')
 
-    socket.on('queueData', (updatedQueue) => {
-        console.log('Queue updated:', updatedQueue)
-        queue = updatedQueue;
-        renderQueue(queue);
-    })
+        console.log("queue ended removing embed")
 
-    socket.on(`removeFromQueue`, ({ queue, url }) => {
-        const thumbnail = document.querySelector(`[data-id="${url}"]`);
-        queue.shift();
-    
-        if (thumbnail) {
-            thumbnail.remove();
-        } else {
-            console.log("No thumbnail found!")
+        if (existingIframe) {
+            existingIframe.remove()
+            resetControls()
         }
+    })
 
-        socket.emit('updateQueue', { room: roomId, queue });
-        console.log('Updated queue after removal:', queue);
-    });
+    socket.on('roomQueue', (roomQueue) => {
+        queue = roomQueue
+        renderQueue(queue)
+    })
+
+    socket.on('queueRemoved', (roomQueue) => {
+        queue = roomQueue
+        renderQueue(queue)
+    })
 
     initializeSearch()
 }
@@ -141,20 +135,16 @@ function initializeSearch() {
     })
 }
 
-function handleQueue(value) {
-    if (value == '') {
+function handleQueue(url) {
+    if (url == '') {
         return
     }
 
-    if (!socket) {
-        embedYoutube(value)
-        return
-    }
-
-    if (!videoLoaded && queue.length >= 0 && isYTLink(value)) {
-        socket.emit('videoUrl', { room: roomId, videoUrl: value })
-    } else if (videoLoaded && isYTLink(value)) {
-        addToQueue(roomId, value)
+    if (!videoLoaded && queue.length === 0 && isYTLink(url)) {
+        socket.emit('videoUrl', { room: roomId, videoUrl: url })
+    } else if (videoLoaded && isYTLink(url)) {
+        socket.emit('addToQueue', roomId, url)
+        console.log("added to queue: " + roomId + url)
     } else {
         callAlert("Invalid YouTube URL, please try again")
     }
@@ -188,6 +178,7 @@ function embedYoutube(textboxValue) {
     player = new YT.Player(iframe, {
         events: {
             onReady: function (event) {
+                player.mute()
                 const title = event.target.getVideoData().title
                 videoTitle.textContent = title
                 const duration = player.getDuration()
@@ -245,8 +236,9 @@ function onPlayerStateChange(event) {
             document.querySelector('#iframe iframe').style.pointerEvents = 'none'
 
             if(autoPlayBlocked === true) {
+                closeAlert()
                 getSyncInfo(roomId, (state) => {
-                    console.log("auto play seek to: " + state.videoTime)
+                    console.log("auto play seek to: " + state.videoTime / 10)
                     player.seekTo(state.videoTime, true)
                 })
                 autoPlayBlocked = false
@@ -268,42 +260,24 @@ function onPlayerStateChange(event) {
                 autoPlayBlocked = true
                 document.querySelector('#iframe iframe').style.pointerEvents = 'auto'
                 setTimeout(() => {
-                    if(isPlaying) {
+                    if(isPlaying && !document.hidden) {
                         callAlert("Your browser has blocked autoplay! Click the video to continue")
                     }
-                }, 250)
+                }, 500)
             }
         })
     }
 
-    if (roomId) {
-        if (event.data == YT.PlayerState.ENDED) {
-            if(canSeek) {
-                console.log('Video ended, playing next video in queue')
-
-                if(isLeader) {
-                    const url = player.getVideoUrl();
-                    const room = roomId;
-                    socket.emit('videoEnded', { room, url });
-                }
-
-                getQueue(roomId, (queue) => {
-                    if (queue.length === 0) {
-                        videoLoaded = false
-                        resetControls()
-                        console.log("removing embed")
-                        document.querySelector('#iframe iframe').remove()
-                    } else {
-                        console.log('Playing next video in queue ' + queue[0])
-                        embedYoutube(queue[0])
-                        if (isLeader) {
-                            removeFromQueue(roomId, queue[0])
-                        }
-                    }
-                })
+    if (event.data == YT.PlayerState.ENDED) {
+        if(canSeek) {
+            if(isLeader) {
+                const url = player.getVideoUrl();
+                const room = roomId;
+                socket.emit('videoEnded', { room, url });
             }
-        } 
-    }
+            
+        }
+    } 
 }
 
 function onAutoplayBlocked(event) {
@@ -329,53 +303,60 @@ function convertUrl(oldUrl) {
     return null
 }
 
-function renderQueue(queue) {
-    const queueContainer = document.querySelector('#queueContainer');
-    queueContainer.innerHTML = '';
-
-    queue.forEach((videoUrl) => {
-        createThumbnail(videoUrl);
-    });
-}
-
-
 // Add thumbnail
-function createThumbnail(url) {
+function createThumbnail(data) {
+    const id = data.id
+    const url = data.url
+
     const videoId = convertUrl(url);
     const thumbnailUrl = "https://img.youtube.com/vi/" + videoId + "/hqdefault.jpg";
 
+    const createThumbnailElement = (container) => {
+        const thumbnail = document.createElement('div');
+        thumbnail.className = url + ' w-full border mx-auto aspect-video rounded-lg relative mb-2';
+        thumbnail.style.backgroundImage = `url(${thumbnailUrl})`;
+        thumbnail.style.backgroundSize = 'cover';
+        thumbnail.style.backgroundPosition = 'center';
+
+        const thumbnailSettings = document.createElement('div');
+        thumbnailSettings.dataset.id = 'thumbnailSettings';
+        thumbnailSettings.className = 'absolute top-1 left-1 flex items-center justify-center bg-black/50 hover:bg-white/50 rounded-lg p-px';
+
+        const exitThumbnail = document.createElement('img');
+        exitThumbnail.id = 'exitThumbnail';
+        exitThumbnail.className = 'w-8 h-8 p-2 cursor-pointer';
+        exitThumbnail.src = 'images/exit.png';
+        exitThumbnail.alt = 'Close';
+        exitThumbnail.draggable = false;
+
+        exitThumbnail.addEventListener('click', () => {
+            socket.emit('removeFromQueue', roomId, id);
+            console.log("removing " + id)
+        });
+
+        thumbnailSettings.appendChild(exitThumbnail);
+        thumbnail.appendChild(thumbnailSettings);
+        container.appendChild(thumbnail);
+    };
+
+    // Create and append thumbnails for both containers
     const queueContainer = document.querySelector('#queueContainer');
     const mQueueContainer = document.querySelector('#mQueueContainer');
+    createThumbnailElement(queueContainer);
+    createThumbnailElement(mQueueContainer);
+}
 
-    const thumbnail = document.createElement('div');
-    thumbnail.className = url + ' w-full border mx-auto aspect-video rounded-lg relative mb-2';
-    thumbnail.style.backgroundImage = `url(${thumbnailUrl})`;
-    thumbnail.style.backgroundSize = 'cover';
-    thumbnail.style.backgroundPosition = 'center';
-    thumbnail.dataset.url = url;
-    thumbnail.dataset.id = url;
+function renderQueue(queue) {
+    const queueContainer = document.querySelector('#queueContainer');
+    const mQueueContainer = document.querySelector('#mQueueContainer');
+    queueContainer.innerHTML = '<h2 id="boxText" class="text-white font-bold text-2xl p-2 font-sans">Queue</h2>';
+    mQueueContainer.innerHTML = '<h2 id="boxText" class="text-white font-bold text-2xl p-2 font-sans">Queue</h2>';
 
-    const thumbnailSettings = document.createElement('div');
-    thumbnailSettings.dataset.id = 'thumbnailSettings';
-    thumbnailSettings.className = 'absolute top-1 left-1 flex items-center justify-center bg-black/50 hover:bg-black/75 rounded-full p-1';
-
-    const exitThumbnail = document.createElement('img');
-    exitThumbnail.id = 'exitThumbnail';
-    exitThumbnail.className = 'w-6 h-6 p-2 cursor-pointer';
-    exitThumbnail.src = 'images/exit.png';
-    exitThumbnail.alt = 'Close';
-    exitThumbnail.draggable = false;
-
-    exitThumbnail.addEventListener('click', () => {
-        removeFromQueue(roomId, thumbnail.dataset.url)
-        console.log("closing: " + thumbnail.dataset.id)
-    });
-
-    thumbnailSettings.appendChild(exitThumbnail);
-    thumbnail.appendChild(thumbnailSettings);
-
-    queueContainer.appendChild(thumbnail.cloneNode(true))
-    mQueueContainer.appendChild(thumbnail);
+    if (queue.length > 0) {
+        for(let i in queue) {
+            createThumbnail(queue[i]);
+        }
+    }
 }
 
 /* Getters and Setters */
@@ -403,20 +384,10 @@ function getSyncInfo(roomId, callback) {
     });
 }
 
-function addToQueue(room, videoId) {
-    socket.emit('addToQueue', { room, videoId });
-}
-
-function removeFromQueue(room, url) {
-    socket.emit('removeFromQueue', { room, url });
-}
-
 function getQueue(room, callback) {
-    console.log("Requesting queue for room:", room);
-    socket.emit('getQueue', room);
+    socket.emit('getRoomQueue', room);
 
-    socket.once('queueData', (queue) => {
-        console.log("Received queue data from server:", queue);
-        callback(queue);
-    });
+    socket.once('roomQueue', (state) => {
+        callback(state);
+    })
 }

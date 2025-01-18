@@ -33,6 +33,7 @@ app.get('/new-room', (req, res) => {
         lastEvent: Date.now(),
         currentVideo: '',
         roomQueue: [],
+        uniqueId: 0,
     }
     res.redirect(`/${roomId}`)
 })
@@ -167,35 +168,36 @@ io.on('connection', (socket) => {
     })
 
     /* Additional Functions and Listeners */
-    socket.on('addToQueue', (data) => {
-        const { room, videoId } = data
+    socket.on('getRoomQueue', (room) => {
         if (validRooms.has(room)) {
-            roomStates[room].roomQueue.push(videoId)
-            io.to(room).emit('addToQueue', videoId)
-            console.log("queue updated: " + roomStates[room].roomQueue)
+            const roomQueue = roomStates[room].roomQueue
+            socket.emit('roomQueue', roomQueue)
         }
     })
 
-    socket.on('getQueue', (room) => {
+    socket.on('addToQueue', (room, videoUrl) => {
         if (validRooms.has(room)) {
-            socket.emit('queueData', roomStates[room].roomQueue || [])
+            console.log("video added to queue: " + roomStates[room].roomQueue)
+            const newPush = {id: roomStates[room].uniqueId++, url: videoUrl}
+
+            roomStates[room].roomQueue.push(newPush)
+            io.to(room).emit('roomQueue', roomStates[room].roomQueue)
         }
     })
 
-    socket.on('removeFromQueue', (data) => {
-        const { room, url } = data
-
+    socket.on('removeFromQueue', (room, uniqueId) => {
+        console.log("Attempting to remove item with id:", uniqueId);
+        
         if (validRooms.has(room)) {
-            const queue = roomStates[room].roomQueue
-
-            if (roomStates[room].roomQueue.length >= 0) {
-                console.log("removing.... thumbnail " + url);
-                roomStates[room].roomQueue.shift()
-                io.to(room).emit('removeFromQueue', { queue, url })
-                console.log("queue updated: " + roomStates[room].roomQueue)
+            const index = roomStates[room].roomQueue.findIndex(item => item.id === uniqueId);
+    
+            if (index !== -1) {
+                roomStates[room].roomQueue.splice(index, 1);
+                io.to(room).emit('queueRemoved', roomStates[room].roomQueue);
             }
         }
-    })
+    });    
+    
 
     socket.on('getRoomLeader', (room) => {
         if (validRooms.has(room)) {
@@ -212,7 +214,19 @@ io.on('connection', (socket) => {
                 roomStates[room].currentVideo = ''
                 roomStates[room].lastEvent = 0
                 roomStates[room].videoTime = 0
-                console.log("current video wiped, now playing: " + roomStates[room].currentVideo)
+                console.log("current video wiped" + roomStates[room].currentVideo)
+                io.to(room).emit('removeEmbed')
+            }
+            if (roomStates[room].roomQueue.length > 0) {
+                const shifted = roomStates[room].roomQueue.shift();
+                const nextVideo = shifted.url;
+
+                console.log("queue popped, next is: " + nextVideo);
+                roomStates[room].currentVideo = nextVideo;
+                io.to(room).emit('videoUrl', nextVideo);
+                roomStates[room].lastEvent = Date.now()
+                roomStates[room].videoTime = 0
+                io.to(room).emit('queueRemoved', roomStates[room].roomQueue)
             }
         }
     });

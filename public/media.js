@@ -25,7 +25,6 @@ document.querySelector('#play').onclick = function () {
     }
 
     getRoomState(roomId, (state) => {
-        queue = state.roomQueue
         if (state.isPlaying) {
             if(playerState === YT.PlayerState.PAUSED) {
                 getSyncInfo(roomId, (state) => {
@@ -291,12 +290,12 @@ function resetControls() {
     const seek = document.querySelector('#seekBar')
     const time = document.querySelector('#time')
     const videoTitle = document.querySelector('#videoTitleText')
-
-    console.log("reset controls")
+    const waiting = document.getElementById('waiting')
 
     seek.value = 0
     time.textContent = "00:00"
     videoTitle.textContent = ""
+    waiting.innerText = '...'
 }
 
 function callAlert(text) {
@@ -340,6 +339,16 @@ function callAlert(text) {
             alert.classList.add("hidden");
         }, 100);
     }
+}
+
+function closeAlert() {
+    const alert = document.getElementById('alertBox');
+
+    alert.classList.add("hidden");
+    alert.classList.add("translate-y-full");
+    alert.classList.add("translate-x-full");
+    alert.classList.remove("translate-x-0");
+    alert.classList.remove("translate-y-full");
 }
 
 function loadPlaylist() {
