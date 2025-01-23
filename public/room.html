@@ -128,13 +128,45 @@
                     </div>
                 </div>
             </div>
-            <h1 id="videoTitleText" class="text-black dark:text-white text-lg sm:text-xl font-semibold text-center">{Video Title}</h1>
+            <h1 id="videoTitleText" class="text-black dark:text-white text-lg sm:text-xl font-semibold text-center"> </h1>
         </div>
     </div>
 
     <div class="w-full h-full flex justify-center">
         <div id="mQueueContainer" class="sm:hidden overflow-y-auto w-3/4 h-5/6 max-h-96 mt-5 bg-gray-900 dark:bg-black rounded-lg px-2">
             <h2 id="boxText" class="text-white font-bold text-2xl p-2 font-sans">Queue</h2>
+        </div>
+    </div>
+
+    <div id="chat" class="fixed right-0 bottom-0">
+        <button class="dark:bg-gray-200 bg-gray-900 sm:h-10 h-10 w-10 p-2 m-2 rounded-lg relative flex items-center justify-center">
+
+            <span id="messagePulse" class="absolute flex items-center justify-center size-3 -top-1 -right-1">
+                <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75"></span>
+                <span class="relative inline-flex h-full w-full rounded-full bg-red-500"></span>
+            </span>
+    
+            <img src="images/chat.svg" class="absolute h-6 w-6 invert dark:invert-0" alt="closeAlertSvg" draggable="false"/>
+        </button>
+    </div>
+
+    <div id="chatBox" class="hidden fixed right-0 bottom-0 items-center flex">
+        <div class="bg-gray-900 dark:bg-gray-200 h-96 w-64 rounded-lg m-2 p-3">
+            <div id="messages" class="w-full h-9/10 rounded-lg overflow-y-auto">          
+                <!-- New messages go here... --> 
+            </div>
+
+            <div class="flex items-center justify-center h-12 pb-1">
+                <form onsubmit="handleMessage(event)" class="flex items-center justify-center w-full">
+                    <input id="messageText" type="text" maxlength="200" placeholder="Type a message..." autocomplete="off"
+                    class="focus:outline-solid focus:outline-green-500 mt-2 bg-gray-50 h-10 w-8/10 
+                            overflow-hidden dark:bg-gray-700 text-black dark:text-white rounded-md mb-2 p-2.5">
+                    <button type="submit" class="bg-green-500 hover:bg-green-600 w-10 h-10 rounded-lg flex m-auto items-center p-2">
+                        <img src="images/send.svg" class="h-10" alt="closeAlertSvg" draggable="false"/>
+                    </button>
+                </form>
+                
+            </div>
         </div>
     </div>
 

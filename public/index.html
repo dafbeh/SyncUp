@@ -8,15 +8,15 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div id="welcome" class="h-screen bg-[#d2d3db] select-none pt-12 flex flex-col dark:bg-[#0f0f0f]">
+    <div id="welcome" class="h-screen bg-[#d2d3db] select-none sm:pt-12 flex flex-col dark:bg-[#0f0f0f]">
         <div class="sm:flex w-full h-5/6">
-            <div id="leftSide" class="sm:w-1/2 w-screen flex sm:justify-end justify-center items-center">
+            <div id="leftSide" class="sm:w-1/2 w-full flex sm:justify-end justify-center items-center">
                 <img id="bigLogo" alt="sync up logo" class="sm:w-[700px] h-1/4 sm:h-[700px] h-1/4 dark:invert" src="images/logo.svg" draggable="false"> 
             </div>
 
             <div id="rightSide" class="mx-auto my-auto sm:ml-32 flex flex-col justify-center items-center">
                 <h1 class="dark:text-white font-bold font-sans sm:text-9xl text-8xl">SyncUp</h1>
-                <button class="sm:w-[425px] w-96 h-[80px] mt-12 shadow-lg bg-white rounded-lg font-bold font-sans text-xl hover:bg-gray-300 flex items-center justify-center text-center box-border" 
+                <button class="sm:w-[425px] w-screen h-[80px] mt-12 shadow-lg bg-white sm:rounded-lg font-bold font-sans text-xl hover:bg-gray-300 flex items-center justify-center text-center box-border" 
                         onclick="window.location.href='/new-room'">
                     Create Room
                 </button>
@@ -33,7 +33,7 @@
 
     <div class="h-screen bg-white">
         <div class="flex justify-center">
-            <h1 class="text-4xl font-bold font-opensans p-4">How to use SyncUp:</h1>
+            <h1 class="sm:text-4xl text-3xl font-bold font-opensans p-4">How to use SyncUp:</h1>
         </div>
     </div>
 

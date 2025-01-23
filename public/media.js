@@ -1,5 +1,6 @@
 let userName = "NO NAME";
 let autoSyncTimer = 5 * 1000;
+let unreadMessages = true;
 
 // Dark + Light Mode
 document.getElementById('theme').onclick = function () {
@@ -239,6 +240,9 @@ document.addEventListener('click', (event) => {
     const volumeButton = document.querySelector('#volume');
     const accountButton = document.querySelector('#account');
 
+    const chat = document.querySelector('#chat')
+    const chatBox = document.querySelector('#chatBox')
+
     // Volume menu
     if (
         !volumeMenu.contains(event.target) &&
@@ -271,6 +275,17 @@ document.addEventListener('click', (event) => {
     ) {
         accountMenu.classList.add('hidden');
     }
+
+    // Chat box
+    if (
+        chatBox &&
+        !chatBox.contains(event.target) &&
+        !chat.contains(event.target)
+    ) {
+        chatBox.classList.add('hidden');
+        chat.classList.remove('hidden');
+    }
+
 });
 
 function loadQualityOptions() {
@@ -324,6 +339,7 @@ document.querySelector('#account').addEventListener('click', () => {
 
 function updateUsername() {
     const alert = document.getElementById('alertBox');
+    const oldName = userName;
     const usernameValue = document.querySelector('#usernameInput');
 
     if(!alert.classList.contains('hidden')) {
@@ -333,8 +349,9 @@ function updateUsername() {
     if(usernameValue.value.length >= 3) {
         userName = usernameValue.value;
         usernameValue.placeholder = userName
-    
+
         callAlert("Username changed... " + userName);
+        socket.emit('newName', { roomId, oldName, newName: userName })
     } else {
         callAlert("Please enter a longer username!");
     }
@@ -387,6 +404,43 @@ function handleCheckTimer() {
 
         autoSyncTimer = timerBar.value * 1000;
     }
+}
+
+document.querySelector('#chat').addEventListener('click', () => {
+    const chat = document.querySelector('#chat')
+    const chatBox = document.querySelector('#chatBox')
+
+    if (
+        chatBox.classList.contains('hidden')
+    ) {
+        chatBox.classList.remove("hidden")
+        chat.classList.add("hidden")
+        readMessage(true)
+    } else {
+        chat.classList.remove("hidden")
+        chatBox.classList.add("hidden")
+    }
+})
+
+function readMessage(value) {
+    unreadMessages = value;
+
+    if(unreadMessages) {
+        document.getElementById('messagePulse').classList.add("hidden");
+    } else if (chatBox.classList.contains("hidden")) {
+        document.getElementById('messagePulse').classList.remove("hidden");
+    }
+}
+
+function handleMessage(event) {
+    event.preventDefault();
+    const messageBox = document.getElementById("messages");
+    const message = document.getElementById("messageText").value;
+
+    socket.emit('message', { roomId, name:userName, message })
+    document.getElementById("messageText").value = ""
+
+    messageBox.scrollTop = messageBox.scrollHeight;
 }
 
 function callAlert(text) {

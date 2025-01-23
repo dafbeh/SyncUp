@@ -32,6 +32,7 @@ function connectToRoom(room) {
         console.log('Connected to WebSocket server for room: ' + room)
         socket.emit('joinRoom', room)
         userName = socket.id
+        socket.emit('joinMessage', room, userName )
 
         getLeader(roomId, (state) => {
             if(socket.id === state) {
@@ -113,6 +114,47 @@ function connectToRoom(room) {
     socket.on('queueRemoved', (roomQueue) => {
         queue = roomQueue
         renderQueue(queue)
+    })
+
+    socket.on('whoJoined', (name) => {
+        const messageBox = document.getElementById('messages');
+        readMessage(false)
+
+        messageBox
+            .innerHTML +=
+            `<div class="flex justify-center items-center mb-1.5"> 
+                <span class="text-sm font-bold font-medium text-white dark:text-gray-800 mt-0 leading-tight text-center"> 
+                ` + name + ` just joined!</span> 
+            </div>`;
+    })
+
+    socket.on('changedName', (data) => {
+        const { oldName, newName } = data;
+        const messageBox = document.getElementById('messages');
+        readMessage(false)
+
+        messageBox
+        .innerHTML +=
+        `<div class="flex justify-center items-center mb-1.5"> 
+            <span class="text-sm font-bold font-medium text-white dark:text-gray-500 mt-0 leading-tight text-center"> 
+                ` + oldName + ` changed to : ` + newName + `</span> 
+        </div>`;
+    })
+
+    socket.on('newMessage', (data) => {
+        const { name, message } = data;
+        const messageBox = document.getElementById('messages');
+        messagesRead = false;
+        readMessage(false)
+
+        messageBox.innerHTML += `
+        <div class="">
+            <span class="text-sm font-medium text-white dark:text-gray-900">` + name + `</span>
+            <p class="text-md mt-0 leading-tight text-white dark:text-gray-900 mb-1.5 break-words">
+                ` + message + `
+            </p>
+        </div>`;
+        messageBox.scrollTop = messageBox.scrollHeight; // Set box to bottom
     })
 
     initializeSearch()

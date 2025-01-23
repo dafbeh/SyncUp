@@ -235,4 +235,31 @@ io.on('connection', (socket) => {
             }
         }
     });
+
+    // Chat Settings
+    socket.on('joinMessage', (room, name) => {
+        if (validRooms.has(room)) {
+            io.to(room).emit('whoJoined', name)
+        }
+    });
+
+    socket.on('newName', (data) => {
+        const { roomId, oldName, newName } = data;
+
+        if (validRooms.has(roomId)) {
+            if(roomUserList[roomId].includes(socket.id)) {
+                io.to(roomId).emit('changedName', {oldName, newName})
+            }
+        }
+    });
+
+    socket.on('message', (data) => {
+        const { roomId, name, message } = data;
+
+        if (validRooms.has(roomId)) {
+            if(roomUserList[roomId].includes(socket.id)) {
+                io.to(roomId).emit('newMessage', { name, message })
+            }
+        }
+    });
 })

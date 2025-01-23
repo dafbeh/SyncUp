@@ -54,10 +54,12 @@
 }
 
 #leftSide {
+  overflow: hidden;
   animation: fade-up 1s 0.1s ease-in-out;
 }
 
 #rightSide {
+  overflow-x: hidden;
   animation: fade-up 1s 0.1s ease-in-out;
 }
 
@@ -110,6 +112,10 @@
 
 /* * Video Section */
 #videoContainer {
+  animation: fade-up 0.5s 0.4s backwards;
+}
+
+#mQueueContainer {
   animation: fade-up 0.5s 0.4s backwards;
 }
 
