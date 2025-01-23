@@ -1,3 +1,6 @@
+let userName = "NO NAME";
+let autoSyncTimer = 5 * 1000;
+
 // Dark + Light Mode
 document.getElementById('theme').onclick = function () {
     const button = document.getElementById('theme');
@@ -60,24 +63,19 @@ document.querySelector('#play').onclick = function () {
 
 // Functionality for seek bar
 document.querySelector('#seekBar').addEventListener('input', (event) => {
-    const seekTime = event.target.value
     isSeeking = true;
-
-    if(!roomId) {
-        player.seekTo(seekTime)
-        return
-    }
 
     if (player && canSeek) {
         socket.emit('videoAction', {
             room: roomId,
             action: 'seek',
-            time: seekTime,
+            time: Math.round(document.querySelector('#seekBar').value),
         })
     }
 
     document.addEventListener("mouseup", () => {
         isSeeking = false;
+    
     }, { once: true });
 })
 
@@ -231,34 +229,49 @@ document.querySelector('#volume').addEventListener('click', () => {
 })
 
 document.addEventListener('click', (event) => {
-    const settingsMenu = document.querySelector('#settingsM')
-    const qualityMenu = document.querySelector('#qualityM')
-    const volumeMenu = document.querySelector('#volumeM')
-    const settingsButton = document.querySelector('#settings')
-    const qualityButton = document.getElementById('quality')
-    const volumeButton = document.querySelector('#volume')
+    const settingsMenu = document.querySelector('#settingsM');
+    const qualityMenu = document.querySelector('#qualityM');
+    const volumeMenu = document.querySelector('#volumeM');
+    const accountMenu = document.querySelector('#accountSettings');
+    
+    const settingsButton = document.querySelector('#settings');
+    const qualityButton = document.querySelector('#quality');
+    const volumeButton = document.querySelector('#volume');
+    const accountButton = document.querySelector('#account');
 
-    if ( // Volume menu
+    // Volume menu
+    if (
         !volumeMenu.contains(event.target) &&
         !volumeButton.contains(event.target)
     ) {
         volumeMenu.style.display = 'none';
     }
 
-    if ( // Settings menu
+    // Settings menu
+    if (
         !settingsMenu.contains(event.target) &&
         !settingsButton.contains(event.target)
     ) {
-        settingsMenu.style.display = 'none'
+        settingsMenu.style.display = 'none';
     }
 
-    if ( // Quality menu
+    // Quality menu
+    if (
         !qualityMenu.contains(event.target) &&
         !qualityButton.contains(event.target)
     ) {
-        qualityMenu.style.display = 'none'
+        qualityMenu.style.display = 'none';
     }
-})
+
+    // Account menu
+    if (
+        accountMenu &&
+        !accountMenu.contains(event.target) &&
+        !accountButton.contains(event.target)
+    ) {
+        accountMenu.classList.add('hidden');
+    }
+});
 
 function loadQualityOptions() {
     const qualityMenu = document.querySelector('#qualityM')
@@ -296,6 +309,84 @@ function resetControls() {
     time.textContent = "00:00"
     videoTitle.textContent = ""
     waiting.innerText = '...'
+}
+
+document.querySelector('#account').addEventListener('click', () => {
+    const account = document.querySelector('#accountSettings')
+    if (
+        account.classList.contains('hidden')
+    ) {
+        account.classList.remove("hidden")
+    } else {
+        account.classList.add("hidden")
+    }
+})
+
+function updateUsername() {
+    const alert = document.getElementById('alertBox');
+    const usernameValue = document.querySelector('#usernameInput');
+
+    if(!alert.classList.contains('hidden')) {
+        closeAlert();
+    }
+
+    if(usernameValue.value.length >= 3) {
+        userName = usernameValue.value;
+        usernameValue.placeholder = userName
+    
+        callAlert("Username changed... " + userName);
+    } else {
+        callAlert("Please enter a longer username!");
+    }
+}
+
+function autoSync() {
+    const checkbox = document.getElementById('autoSyncCheckbox');
+
+    if(checkbox.checked) {
+        closeAlert()
+        callAlert("Auto sync enabled!");
+        syncing();
+    } else {
+        closeAlert()
+        closeTimeout(syncingTimer);
+        callAlert("Auto sync disabled!");
+    }
+}
+
+function syncing() {
+    if(document.getElementById('autoSyncCheckbox').checked 
+            && player.getPlayerState() === YT.PlayerState.PLAYING
+                && videoLoaded) {
+        syncingTimer = setTimeout(() => {
+            if(player.getPlayerState() === YT.PlayerState.PLAYING) {
+                getSyncInfo(roomId, (state) => {
+                    console.log((autoSyncTimer / 1000) + " has passed, scanning...")
+                    console.log("difference = " + (state.videoTime - player.getCurrentTime()))
+                    if (Math.abs(state.videoTime - player.getCurrentTime()) > 1 ) {
+                        player.seekTo(state.videoTime, true)
+                        console.log("server time: " + state.videoTime + " player time = " + player.getCurrentTime())
+                    }
+                    syncing();
+                })
+            } else { syncing(); }
+        }, autoSyncTimer)
+    } else {
+        setTimeout(() => {
+            syncing();
+        }, autoSyncTimer)
+    }
+}
+
+function handleCheckTimer() {
+    const timerText = document.getElementById('checkTimerText');
+    const timerBar = document.getElementById('checkTimerBar');
+    
+    if(timerBar.value >= 3 && timerBar.value <= 30) {
+        timerText.textContent = "Check Timer ("+ timerBar.value + " seconds)"
+
+        autoSyncTimer = timerBar.value * 1000;
+    }
 }
 
 function callAlert(text) {
@@ -344,11 +435,15 @@ function callAlert(text) {
 function closeAlert() {
     const alert = document.getElementById('alertBox');
 
-    alert.classList.add("hidden");
-    alert.classList.add("translate-y-full");
-    alert.classList.add("translate-x-full");
-    alert.classList.remove("translate-x-0");
-    alert.classList.remove("translate-y-full");
+    if(!alert.classList.contains('hidden')) {
+        clearTimeout(closeTimeout)
+
+        alert.classList.add("hidden");
+        alert.classList.add("translate-y-full");
+        alert.classList.add("translate-x-full");
+        alert.classList.remove("translate-x-0");
+        alert.classList.remove("translate-y-full");
+    }
 }
 
 function loadPlaylist() {

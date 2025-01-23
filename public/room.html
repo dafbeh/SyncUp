@@ -9,8 +9,8 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 
-<body id="body" class="h-screen bg-[#d2d3db] flex flex-col dark:bg-[#0f0f0f]">
-    <div id="topBar" class="bg-[#d2d3db] select-none flex justify-between items-center h-12 w-full dark:bg-[#0f0f0f]">
+<body id="body" class="h-screen bg-white flex flex-col dark:bg-[#0f0f0f]">
+    <div id="topBar" class="bg-white select-none flex justify-between items-center h-12 w-full dark:bg-[#0f0f0f]">
         <div class="flex">
             <img id="logo" class="w-12 h-12 dark:invert cursor-pointer" alt="SyncUp" src="images/logo.svg" draggable="false"
                 onclick="window.location.href='/'">
@@ -25,6 +25,32 @@
     </div>
     <div id="horizontalSpacer" class="border-t-2 border-gray-500 w-full dark:border-white dark:border-t-1"></div>
 
+    <div id="accountSettings" class="hidden overflow-x-hidden absolute right-0 top-12 w-64 h-44 bg-gray-900 dark:bg-gray-200 rounded-b-md z-50">
+        <div class="px-2 pt-2">
+            <form onsubmit="return false;">
+                <span class="text-sm font-medium text-white dark:text-gray-900">Username:</span>
+                <input id="usernameInput" type="text" maxlength="16" placeholder="username" onchange="updateUsername()"
+                class="bg-gray-50 w-full overflow-hidden dark:bg-gray-700 border border-gray-300 text-black dark:text-white rounded-md mb-2 p-2.5">
+                
+                <label class="inline-flex items-center cursor-pointer">
+                    <input id="autoSyncCheckbox" type="checkbox" checked class="sr-only peer" onchange="autoSync()">
+                    <div class="relative w-11 h-6 bg-gray-200 
+                    rounded-full dark:bg-gray-700 peer-checked:after:translate-x-full 
+                    rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white 
+                    after:content-[''] after:absolute after:top-[2px] after:start-[2px] 
+                    after:bg-white after:border-gray-300 after:border after:rounded-full 
+                    after:h-5 after:w-5 after:transition-all dark:border-gray-600 
+                    peer-checked:bg-blue-600"></div> <!-- Taken from flowbite.com--> 
+                    <span class="ms-3 text-sm font-medium text-white dark:text-gray-900">Auto Sync</span>
+                </label>
+                <br>
+                <span id="checkTimerText" class="text-sm font-medium text-white dark:text-gray-900">Check Timer (5 seconds)</span>
+                <input id="checkTimerBar" type="range" class="w-full bg-gray-600 rounded-md cursor-pointer" value="5" min="3"
+                max="30" onchange="handleCheckTimer()">
+            </form>
+        </div>
+    </div>
+
     <button class="absolute mt-14 ml-1 bg-white p-3 rounded-lg" onclick="loadPlaylist()">
         Load Playlist
     </button>
@@ -32,14 +58,14 @@
     <div id="videoContainer" class="flex flex-col items-center space-y-4 mt-16">
         <div id="searchSection" class="flex justify-center w-full">
             <div id="searchContainer"
-                class="flex items-center bg-gray-300 dark:bg-gray-200 p-2 
+                class="flex items-center bg-gray-900 dark:bg-gray-200 0 p-2 
                     4xl:w-1/6 3xl:w-1/5 lg:w-2/6 md:w-3/6 sm:w-1/2 rounded-lg shadow-lg transition-all duration-300 
                     ease-in-out 4xl:focus-within:w-1/5 3xl:focus-within:w-1/4">
                 <form id="searchForm" class="flex items-center justify-between w-full">
-                    <input type="text" id="searchBar"
-                        class="text-black p-1 w-full bg-transparent focus:outline-none rounded-lg mr-2"
+                    <input type="text" id="searchBar" style="background-color: transparent;"
+                        class="text-white dark:text-black p-1 w-full bg-transparent focus:outline-none rounded-lg mr-2 autofill:bg-transparent autofill:text-inherit"
                         placeholder="Enter Url...">
-                    <img id="searchIcon" class="w-8 h-8 cursor-pointer" src="images/search.svg" alt="Search"
+                    <img id="searchIcon" class="w-8 h-8 cursor-pointer invert dark:invert-0" src="images/search.svg" alt="Search"
                         draggable="false">
                 </form>
             </div>

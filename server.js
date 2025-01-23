@@ -129,6 +129,7 @@ io.on('connection', (socket) => {
                     break
                 case 'seek':
                     state.videoTime = time
+                    console.log("seeked too: " + time)
                     state.lastEvent = Date.now()
                     break
             }
@@ -138,9 +139,13 @@ io.on('connection', (socket) => {
 
     function getSyncInfo(roomId) {
         const room = roomStates[roomId]
-        const timePassed = (Date.now() - room.lastEvent) / 1000;
+        let timePassed = (Date.now() - room.lastEvent) / 1000;
 
-        console.log("current video time: " + room.videoTime)
+        if(!roomStates[roomId].isPlaying) {
+            timePassed = 0
+        }
+
+        console.log("current video time: " + (room.videoTime + timePassed))
 
         if(room.isPlaying) {
             return {

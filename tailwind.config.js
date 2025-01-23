@@ -11,6 +11,9 @@ module.exports = {
         '4xl': '2550px',
         '3xl': '1900px',
       },
+      fontFamily: {
+        opensans: ['Open Sans']
+      }
     },
   },
   darkMode: 'class',

@@ -31,6 +31,7 @@ function connectToRoom(room) {
     socket.on('connect', () => {
         console.log('Connected to WebSocket server for room: ' + room)
         socket.emit('joinRoom', room)
+        userName = socket.id
 
         getLeader(roomId, (state) => {
             if(socket.id === state) {
@@ -238,8 +239,10 @@ function onPlayerStateChange(event) {
             if(autoPlayBlocked === true) {
                 closeAlert()
                 getSyncInfo(roomId, (state) => {
-                    console.log("auto play seek to: " + state.videoTime / 10)
-                    player.seekTo(state.videoTime, true)
+                    if(state.videoTime <= player.getDuration()) {
+                        console.log("auto play seek to: " + state.videoTime)
+                        player.seekTo(state.videoTime, true)
+                    }
                 })
                 autoPlayBlocked = false
             }
@@ -275,7 +278,7 @@ function onPlayerStateChange(event) {
                 const room = roomId;
                 socket.emit('videoEnded', { room, url });
             }
-            
+            videoLoaded = false
         }
     } 
 }
