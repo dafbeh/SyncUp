@@ -1,5 +1,6 @@
 let userName = "NO NAME";
-let autoSyncTimer = 5 * 1000;
+let autoSyncTimer = 5;
+let slippage = 2;
 let unreadMessages = true;
 
 // Dark + Light Mode
@@ -366,32 +367,39 @@ function autoSync() {
         syncing();
     } else {
         closeAlert()
-        closeTimeout(syncingTimer);
+        clearTimeout(syncingTimer);
         callAlert("Auto sync disabled!");
     }
 }
 
 function syncing() {
-    if(document.getElementById('autoSyncCheckbox').checked 
-            && player.getPlayerState() === YT.PlayerState.PLAYING
-                && videoLoaded) {
+    if(document.getElementById('autoSyncCheckbox').checked) {
         syncingTimer = setTimeout(() => {
-            if(player.getPlayerState() === YT.PlayerState.PLAYING) {
+            if(player.getPlayerState() === YT.PlayerState.PLAYING && videoLoaded) {
                 getSyncInfo(roomId, (state) => {
-                    console.log((autoSyncTimer / 1000) + " has passed, scanning...")
+                    console.log((autoSyncTimer) + " has passed, scanning...")
                     console.log("difference = " + (state.videoTime - player.getCurrentTime()))
-                    if (Math.abs(state.videoTime - player.getCurrentTime()) > 1 ) {
+                    if (Math.abs(state.videoTime - player.getCurrentTime()) > slippage ) {
                         player.seekTo(state.videoTime, true)
                         console.log("server time: " + state.videoTime + " player time = " + player.getCurrentTime())
                     }
                     syncing();
                 })
             } else { syncing(); }
-        }, autoSyncTimer)
+        }, autoSyncTimer * 1000)
     } else {
-        setTimeout(() => {
-            syncing();
-        }, autoSyncTimer)
+        console.log("not checked")
+    }
+}
+
+function handleSlippage() {
+    const slippageText = document.getElementById('slippageText');
+    const slippageBar = document.getElementById('slippageBar');
+    
+    if(slippageBar.value >= 1 && slippageBar.value <= 10) {
+        slippageText.textContent = "Slippage ("+ slippageBar.value + " seconds)"
+
+        slippage = slippageBar.value;
     }
 }
 
@@ -402,7 +410,7 @@ function handleCheckTimer() {
     if(timerBar.value >= 3 && timerBar.value <= 30) {
         timerText.textContent = "Check Timer ("+ timerBar.value + " seconds)"
 
-        autoSyncTimer = timerBar.value * 1000;
+        autoSyncTimer = timerBar.value;
     }
 }
 

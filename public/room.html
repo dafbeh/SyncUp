@@ -25,7 +25,7 @@
     </div>
     <div id="horizontalSpacer" class="border-t-2 border-gray-500 w-full dark:border-white dark:border-t-1"></div>
 
-    <div id="accountSettings" class="hidden overflow-x-hidden absolute right-0 top-12 w-64 h-44 bg-gray-900 dark:bg-gray-200 rounded-b-md z-50">
+    <div id="accountSettings" class="hidden overflow-x-hidden absolute right-0 top-12 w-64 pb-3 bg-gray-900 dark:bg-gray-200 rounded-b-md z-50">
         <div class="px-2 pt-2">
             <form onsubmit="return false;">
                 <span class="text-sm font-medium text-white dark:text-gray-900">Username:</span>
@@ -44,9 +44,13 @@
                     <span class="ms-3 text-sm font-medium text-white dark:text-gray-900">Auto Sync</span>
                 </label>
                 <br>
+                <span id="slippageText" class="text-sm font-medium text-white dark:text-gray-900">Slippage (3 seconds)</span>
+                <input id="slippageBar" type="range" class="w-full bg-gray-600 rounded-md cursor-pointer" value="3" min="1"
+                max="10" onchange="handleSlippage()">
+                <br>
                 <span id="checkTimerText" class="text-sm font-medium text-white dark:text-gray-900">Check Timer (5 seconds)</span>
                 <input id="checkTimerBar" type="range" class="w-full bg-gray-600 rounded-md cursor-pointer" value="5" min="3"
-                max="30" onchange="handleCheckTimer()">
+                max="10" onchange="handleCheckTimer()">
             </form>
         </div>
     </div>

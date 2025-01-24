@@ -34,6 +34,8 @@ function connectToRoom(room) {
         userName = socket.id
         socket.emit('joinMessage', room, userName )
 
+        syncing();
+
         getLeader(roomId, (state) => {
             if(socket.id === state) {
                 isLeader = true;

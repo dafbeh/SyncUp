@@ -1,4 +1,5 @@
 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
+https://github.com/Ripty/SyncUp
 What succeeded:
     - Check Git Pushes
 
