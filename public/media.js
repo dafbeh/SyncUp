@@ -86,7 +86,7 @@ function updateTimer() {
     const time = document.querySelector('#time')
 
     setInterval(() => {
-        if (player) {
+        if (player && videoLoaded) {
             seek.value = player.getCurrentTime()
             time.textContent =
                 '-' + timeLeft(player.getCurrentTime(), player.getDuration())
@@ -375,7 +375,7 @@ function autoSync() {
 function syncing() {
     if(document.getElementById('autoSyncCheckbox').checked) {
         syncingTimer = setTimeout(() => {
-            if(player.getPlayerState() === YT.PlayerState.PLAYING && videoLoaded) {
+            if(videoLoaded && player.getPlayerState() === YT.PlayerState.PLAYING) {
                 getSyncInfo(roomId, (state) => {
                     console.log((autoSyncTimer) + " has passed, scanning...")
                     console.log("difference = " + (state.videoTime - player.getCurrentTime()))
@@ -451,6 +451,12 @@ function handleMessage(event) {
     messageBox.scrollTop = messageBox.scrollHeight;
 }
 
+function skipVideo() {
+    const url = player.getVideoUrl()
+
+    socket.emit('videoEnded', { room:roomId, url } )
+}
+
 function callAlert(text) {
     const alert = document.getElementById('alertBox');
     const exitBtn = document.getElementById('closeAlert');
@@ -508,7 +514,7 @@ function closeAlert() {
     }
 }
 
-function loadPlaylist() {
+function loadBeatles() {
     const videoLinks = [
         "https://www.youtube.com/watch?v=CGj85pVzRJs",
         "https://www.youtube.com/watch?v=KQetemT1sWc",

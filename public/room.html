@@ -14,7 +14,7 @@
         <div class="flex">
             <img id="logo" class="w-12 h-12 dark:invert cursor-pointer" alt="SyncUp" src="images/logo.svg" draggable="false"
                 onclick="window.location.href='/'">
-            <h1 class="text-black dark:text-white font-bold text-3xl my-1 ml-2 font-mono">SyncUp</h1>
+            <h1 class="text-black dark:text-white font-bold text-3xl my-1 ml-2 font-opensans">SyncUp</h1>
         </div>
         <div class="flex items-center">
             <img id="theme" alt="nightmode/lightmode" class="w-6 h-6 mr-5 cursor-pointer mr-2 dark:invert"
@@ -25,7 +25,7 @@
     </div>
     <div id="horizontalSpacer" class="border-t-2 border-gray-500 w-full dark:border-white dark:border-t-1"></div>
 
-    <div id="accountSettings" class="hidden overflow-x-hidden absolute right-0 top-12 w-64 pb-3 bg-gray-900 dark:bg-gray-200 rounded-b-md z-50">
+    <div id="accountSettings" class="hidden overflow-x-hidden absolute right-0 top-12 w-64 pb-3 bg-gray-900 dark:bg-gray-100 rounded-b-md z-50">
         <div class="px-2 pt-2">
             <form onsubmit="return false;">
                 <span class="text-sm font-medium text-white dark:text-gray-900">Username:</span>
@@ -34,7 +34,7 @@
                 
                 <label class="inline-flex items-center cursor-pointer">
                     <input id="autoSyncCheckbox" type="checkbox" checked class="sr-only peer" onchange="autoSync()">
-                    <div class="relative w-11 h-6 bg-gray-200 
+                    <div class="relative w-11 h-6 bg-gray-100 
                     rounded-full dark:bg-gray-700 peer-checked:after:translate-x-full 
                     rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white 
                     after:content-[''] after:absolute after:top-[2px] after:start-[2px] 
@@ -55,14 +55,10 @@
         </div>
     </div>
 
-    <button class="absolute mt-14 ml-1 bg-white p-3 rounded-lg" onclick="loadPlaylist()">
-        Load Playlist
-    </button>
-
     <div id="videoContainer" class="flex flex-col items-center space-y-4 mt-16">
         <div id="searchSection" class="flex justify-center w-full">
             <div id="searchContainer"
-                class="flex items-center bg-gray-900 dark:bg-gray-200 0 p-2 
+                class="flex items-center bg-gray-900 dark:bg-gray-100 0 p-2 
                     4xl:w-1/6 3xl:w-1/5 lg:w-2/6 md:w-3/6 sm:w-1/2 rounded-lg shadow-lg transition-all duration-300 
                     ease-in-out 4xl:focus-within:w-1/5 3xl:focus-within:w-1/4">
                 <form id="searchForm" class="flex items-center justify-between w-full">
@@ -81,12 +77,19 @@
                 <div id="iframe" class="w-full h-full">
             </div>
         </div>
-            <div id="queueContainer" class="hidden sm:block overflow-y-auto h-full 4xl:w-96 sm:w-64 bg-gray-900 dark:bg-black rounded-lg px-2">
-                <h2 id="boxText" class="text-white font-bold text-2xl p-2 font-sans">Queue</h2>
+            <div id="queueContainer" class="hidden sm:block overflow-y-auto h-full 4xl:w-96 sm:w-64 bg-gray-900 dark:bg-black rounded-lg px-2 mb-2">
+                <div class="flex justify-between">
+                    <h2 id="boxText" class="text-white font-bold text-2xl p-2 font-opensans select-none">Queue</h2>
+                    <button id="skip" class="px-1" onclick="skipVideo()">
+                        <img class="invert w-8 h-8" draggable=false src="images/skip.svg">
+                    </button>
+                </div>
+                <div id="queuePc" class="w-full">
+                </div>
             </div>
         </div>
 
-        <div id="controlsContainer" class="w-full 4xl:w-2/3 md:w-1/3 flex flex-col items-center space-y-2">
+        <div id="controlsContainer" class="w-full 4xl:w-2/3 md:w-1/3 flex flex-col items-center px-1">
             <div id="controls" class="w-full flex justify-between items-center space-x-4">
                 <button id="play" class="text-white bg-gray-800 p-1 rounded-md hover:bg-gray-600">
                     <svg class="invert w-8 h-8" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -96,7 +99,7 @@
                     </svg>
                 </button>
                 <label id="time" class="text-black dark:text-white">00:00</label>
-                <input id="seekBar" type="range" class="w-full bg-gray-600 rounded-md cursor-pointer" value="0" min="0"
+                <input id="seekBar" type="range" class="w-full bg-gray-600 dark:bg-white rounded-md cursor-pointer" value="0" min="0"
                     max="100">
                 <div class="relative">
                     <button id="volume" class="text-white bg-gray-800 p-1 rounded-md hover:bg-gray-600">
@@ -137,25 +140,34 @@
     </div>
 
     <div class="w-full h-full flex justify-center">
-        <div id="mQueueContainer" class="sm:hidden overflow-y-auto w-3/4 h-5/6 max-h-96 mt-5 bg-gray-900 dark:bg-black rounded-lg px-2">
-            <h2 id="boxText" class="text-white font-bold text-2xl p-2 font-sans">Queue</h2>
+        <div id="mQueueContainer" class="sm:hidden overflow-y-auto w-3/4 h-5/6 max-h-96 mt-5 bg-gray-900 dark:bg-black rounded-lg px-2 mb-2">
+            <div class="flex justify-between">
+                <h2 id="boxText" class="text-white font-bold text-2xl p-2 font-opensans">Queue</h2>
+                <button id="skip" class="px-1" onclick="skipVideo()">
+                    <img class="invert w-8 h-8" draggable=false src="images/skip.svg">
+                </button>
+            </div>
+            <div id="queueM" class="w-full">
+            </div>
         </div>
     </div>
 
     <div id="chat" class="fixed right-0 bottom-0">
-        <button class="dark:bg-gray-200 bg-gray-900 sm:h-10 h-10 w-10 p-2 m-2 rounded-lg relative flex items-center justify-center">
+        <button class="dark:bg-white bg-gray-900 sm:h-10 h-10 w-10 p-2 m-2 rounded-lg 
+                relative flex items-center justify-center transform transition-transform 
+                duration-300 ease-in-out dark:hover:bg-gray-200">
 
             <span id="messagePulse" class="absolute flex items-center justify-center size-3 -top-1 -right-1">
                 <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75"></span>
                 <span class="relative inline-flex h-full w-full rounded-full bg-red-500"></span>
             </span>
     
-            <img src="images/chat.svg" class="absolute h-6 w-6 invert dark:invert-0" alt="closeAlertSvg" draggable="false"/>
+            <img id="chatImage" src="images/chat.svg" class="absolute h-6 w-6 invert dark:invert-0" alt="closeAlertSvg" draggable="false"/>
         </button>
     </div>
 
     <div id="chatBox" class="hidden fixed right-0 bottom-0 items-center flex">
-        <div class="bg-gray-900 dark:bg-gray-200 h-96 w-64 rounded-lg m-2 p-3">
+        <div class="bg-gray-900 dark:bg-gray-100 h-96 w-64 rounded-lg m-2 p-3">
             <div id="messages" class="w-full h-9/10 rounded-lg overflow-y-auto">          
                 <!-- New messages go here... --> 
             </div>

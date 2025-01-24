@@ -5,7 +5,7 @@
   "main": "test.js",
   "scripts": {
     "start:node": "node server.js",
-    "start:tailwind": "npx tailwindcss -i ./public/input.css -o ./public/tailwind.css --watch",
+    "start:tailwind": "npx tailwindcss -i ./public/global.css -o ./public/tailwind.css --watch",
     "start": "npm-run-all --parallel start:node start:tailwind"
   },
   "keywords": [],

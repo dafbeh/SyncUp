@@ -114,6 +114,7 @@ function connectToRoom(room) {
     })
 
     socket.on('queueRemoved', (roomQueue) => {
+        videoLoaded = false
         queue = roomQueue
         renderQueue(queue)
     })
@@ -185,6 +186,11 @@ function handleQueue(url) {
         return
     }
 
+    if(url === "beatle") {
+        loadBeatles();
+        return;
+    }
+
     if (!videoLoaded && queue.length === 0 && isYTLink(url)) {
         socket.emit('videoUrl', { room: roomId, videoUrl: url })
     } else if (videoLoaded && isYTLink(url)) {
@@ -228,6 +234,7 @@ function embedYoutube(textboxValue) {
                 videoTitle.textContent = title
                 const duration = player.getDuration()
                 document.querySelector('#seekBar').max = duration
+                videoLoaded = true
 
                 player.setVolume( document.querySelector('#volumeR').value);
 
@@ -360,7 +367,7 @@ function createThumbnail(data) {
 
     const createThumbnailElement = (container) => {
         const thumbnail = document.createElement('div');
-        thumbnail.className = url + ' w-full border mx-auto aspect-video rounded-lg relative mb-2';
+        thumbnail.className = url + ' w-full border mx-auto aspect-video rounded-lg relative mb-2 cursor-pointer';
         thumbnail.style.backgroundImage = `url(${thumbnailUrl})`;
         thumbnail.style.backgroundSize = 'cover';
         thumbnail.style.backgroundPosition = 'center';
@@ -387,17 +394,17 @@ function createThumbnail(data) {
     };
 
     // Create and append thumbnails for both containers
-    const queueContainer = document.querySelector('#queueContainer');
-    const mQueueContainer = document.querySelector('#mQueueContainer');
+    const queueContainer = document.querySelector('#queuePc');
+    const mQueueContainer = document.querySelector('#queueM');
     createThumbnailElement(queueContainer);
     createThumbnailElement(mQueueContainer);
 }
 
 function renderQueue(queue) {
-    const queueContainer = document.querySelector('#queueContainer');
-    const mQueueContainer = document.querySelector('#mQueueContainer');
-    queueContainer.innerHTML = '<h2 id="boxText" class="text-white font-bold text-2xl p-2 font-sans">Queue</h2>';
-    mQueueContainer.innerHTML = '<h2 id="boxText" class="text-white font-bold text-2xl p-2 font-sans">Queue</h2>';
+    const queuePc = document.querySelector('#queuePc');
+    const queueM = document.querySelector('#queueM');
+    queuePc.innerHTML = '';
+    queueM.innerHTML = '';
 
     if (queue.length > 0) {
         for(let i in queue) {

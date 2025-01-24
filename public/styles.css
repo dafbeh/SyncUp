@@ -93,6 +93,10 @@
   transform: scale(1.1);
 }
 
+#chat {
+  animation: fade-up 0.5s 0.4s backwards;
+}
+
 /* Search Section */
 #searchSection {
   animation: fade-up 0.2s 0.4s backwards;
@@ -117,6 +121,14 @@
 
 #mQueueContainer {
   animation: fade-up 0.5s 0.4s backwards;
+}
+
+#skip {
+  transition: transform 0.3s ease;
+}
+
+#skip:hover {
+  transform: scale(1.2);
 }
 
 #waiting {
