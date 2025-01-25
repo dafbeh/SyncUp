@@ -18,7 +18,7 @@ const roomStates = {}
 app.use(express.static('public'))
 
 // Start the server
-server.listen(PORT, () => {
+server.listen(PORT, '0.0.0.0', () => {
     console.log('Server is running on port ' + PORT)
 })
 
@@ -60,7 +60,6 @@ io.on('connection', (socket) => {
             if (roomUserList[room].length === 0) {
                 roomLeader[room] = socket.id
                 io.to(socket.id).emit('newLeader', socket.id);
-                console.log("new leader!")
             }
 
             roomUserList[room].push(socket.id)
@@ -243,7 +242,12 @@ io.on('connection', (socket) => {
     // Chat Settings
     socket.on('joinMessage', (room, name) => {
         if (validRooms.has(room)) {
-            io.to(room).emit('whoJoined', name)
+            if(roomLeader[room] !== socket.id) {
+                io.to(room).emit('whoJoined', name)
+            } else {
+                const leaderName = "👑 " + name
+                io.to(room).emit('whoJoined', leaderName)
+            }
         }
     });
 
@@ -277,4 +281,15 @@ io.on('connection', (socket) => {
             }
         }
     });
+
+    socket.on('leaveMessage', (room, name) => {
+        if(validRooms.has(room)) {
+            if(roomLeader[room] !== socket.id) {
+                io.to(room).emit('whoLeft', name)
+            } else {
+                const leaderName = "👑 " + name
+                io.to(room).emit('whoLeft', leaderName)
+            }
+        }
+    })
 })

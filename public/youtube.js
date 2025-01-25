@@ -21,6 +21,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 })
 
+window.addEventListener('beforeunload', () => {
+    socket.emit('leaveMessage', roomId, userName);
+    socket.disconnect();
+})
+
 // Connect to the WebSocket server
 function connectToRoom(room) {
     if (socket) {
@@ -32,9 +37,20 @@ function connectToRoom(room) {
         console.log('Connected to WebSocket server for room: ' + room)
         socket.emit('joinRoom', room)
         userName = socket.id
-        socket.emit('joinMessage', room, userName)
         updateTimer()
         syncing();
+
+        if(document.cookie) {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; username=`);
+            if (parts.length === 2) {
+                userName = parts.pop().split(';').shift();
+                document.querySelector('#usernameInput').value = userName
+                socket.emit('joinMessage', room, userName)
+            }
+        } else {
+            socket.emit('joinMessage', room, socket.id)
+        }
 
         socket.on('newLeader', (id) => {
             if(socket.id === id) {
@@ -160,6 +176,18 @@ function connectToRoom(room) {
             </p>
         </div>`;
         messageBox.scrollTop = messageBox.scrollHeight; // Set box to bottom
+    })
+
+    socket.on('whoLeft', (name) => {
+        const messageBox = document.getElementById('messages');
+        readMessage(false)
+
+        messageBox
+            .innerHTML +=
+            `<div class="flex justify-center items-center mb-1.5"> 
+                <span class="text-sm font-bold font-medium text-white dark:text-gray-800 mt-0 leading-tight text-center"> 
+                ` + name + ` has left</span> 
+            </div>`;
     })
 
     initializeSearch()

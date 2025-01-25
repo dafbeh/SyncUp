@@ -351,6 +351,7 @@ function updateUsername() {
     if(usernameValue.value.length >= 3) {
         userName = usernameValue.value;
         usernameValue.placeholder = userName
+        document.cookie = `username=${userName}; path=/; max-age=${60 * 60 * 24 * 30}`;
 
         callAlert("Username changed to " + userName);
         socket.emit('newName', { roomId, oldName, newName: userName })
