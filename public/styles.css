@@ -93,7 +93,28 @@
   transform: scale(1.1);
 }
 
+#theme {
+  transition: transform 0.3s ease;
+}
+
+#theme:hover {
+  transform: scale(1.1);
+}
+
+#lock {
+  transition: transform 0.3s ease;
+}
+
+#lock:hover {
+  transform: scale(1.1);
+}
+
 #chat {
+  opacity: 1;
+  transition: none;
+}
+
+.chat-fade {
   animation: fade-up 0.5s 0.4s backwards;
 }
 

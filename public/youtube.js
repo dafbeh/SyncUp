@@ -32,14 +32,15 @@ function connectToRoom(room) {
         console.log('Connected to WebSocket server for room: ' + room)
         socket.emit('joinRoom', room)
         userName = socket.id
-        socket.emit('joinMessage', room, userName )
-
+        socket.emit('joinMessage', room, userName)
+        updateTimer()
         syncing();
 
-        getLeader(roomId, (state) => {
-            if(socket.id === state) {
+        socket.on('newLeader', (id) => {
+            if(socket.id === id) {
                 isLeader = true;
-                console.log("You are the room leader!")
+                document.getElementById('lockRoom').classList.remove("hidden");
+                callAlert("You are the room leader!")
             }
         })
 
@@ -98,6 +99,7 @@ function connectToRoom(room) {
     })
 
     socket.on('removeEmbed', () => {
+        videoLoaded = false
         const existingIframe = document.querySelector('#iframe iframe')
 
         console.log("queue ended removing embed")
@@ -114,7 +116,7 @@ function connectToRoom(room) {
     })
 
     socket.on('queueRemoved', (roomQueue) => {
-        videoLoaded = false
+        document.querySelector('#time').innerHTML = "00:00";
         queue = roomQueue
         renderQueue(queue)
     })
@@ -205,6 +207,7 @@ function handleQueue(url) {
 function embedYoutube(textboxValue) {
     const existingIframe = document.querySelector('#iframe iframe')
     const videoTitle = document.querySelector('#videoTitleText')
+    videoLoaded = true;
 
     if (existingIframe) {
         existingIframe.remove()
@@ -234,7 +237,6 @@ function embedYoutube(textboxValue) {
                 videoTitle.textContent = title
                 const duration = player.getDuration()
                 document.querySelector('#seekBar').max = duration
-                videoLoaded = true
 
                 player.setVolume( document.querySelector('#volumeR').value);
 
@@ -270,7 +272,6 @@ function embedYoutube(textboxValue) {
             'onAutoplayBlocked': onAutoplayBlocked
         },
     })
-    videoLoaded = true
 }
 
 // YouTube player state change
@@ -283,7 +284,7 @@ function onPlayerStateChange(event) {
                 'd',
                 'M5.163 3.819C5 4.139 5 4.559 5 5.4v13.2c0 .84 0 1.26.163 1.581a1.5 1.5 0 0 0 .656.655c.32.164.74.164 1.581.164h.2c.84 0 1.26 0 1.581-.163a1.5 1.5 0 0 0 .656-.656c.163-.32.163-.74.163-1.581V5.4c0-.84 0-1.26-.163-1.581a1.5 1.5 0 0 0-.656-.656C8.861 3 8.441 3 7.6 3h-.2c-.84 0-1.26 0-1.581.163a1.5 1.5 0 0 0-.656.656zm9 0C14 4.139 14 4.559 14 5.4v13.2c0 .84 0 1.26.164 1.581a1.5 1.5 0 0 0 .655.655c.32.164.74.164 1.581.164h.2c.84 0 1.26 0 1.581-.163a1.5 1.5 0 0 0 .655-.656c.164-.32.164-.74.164-1.581V5.4c0-.84 0-1.26-.163-1.581a1.5 1.5 0 0 0-.656-.656C17.861 3 17.441 3 16.6 3h-.2c-.84 0-1.26 0-1.581.163a1.5 1.5 0 0 0-.655.656z'
             )
-            updateTimer()
+            
             canSeek = true
             document.querySelector('#iframe iframe').style.pointerEvents = 'none'
 
@@ -329,7 +330,6 @@ function onPlayerStateChange(event) {
                 const room = roomId;
                 socket.emit('videoEnded', { room, url });
             }
-            videoLoaded = false
         }
     } 
 }
@@ -414,14 +414,6 @@ function renderQueue(queue) {
 }
 
 /* Getters and Setters */
-function getLeader(roomId, callback) {
-    socket.emit('getRoomLeader', roomId);
-
-    socket.once('roomLeader', (state) => {
-            callback(state);
-    });
-}
-
 function getRoomState(roomId, callback) {
     socket.emit('getRoomState', roomId);
 

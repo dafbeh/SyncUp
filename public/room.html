@@ -17,6 +17,8 @@
             <h1 class="text-black dark:text-white font-bold text-3xl my-1 ml-2 font-opensans">SyncUp</h1>
         </div>
         <div class="flex items-center">
+            <img id="lockRoom" alt="nightmode/lightmode" class="hidden w-6 h-6 mr-5 cursor-pointer mr-2 dark:invert"
+                src="images/unlocked.svg" draggable="false" onclick="lockRoom()">
             <img id="theme" alt="nightmode/lightmode" class="w-6 h-6 mr-5 cursor-pointer mr-2 dark:invert"
                 src="images/sun.svg" draggable="false">
             <img id="account" alt="settings" class="w-9 h-9 cursor-pointer mr-2 dark:invert" src="images/account.svg"
@@ -152,7 +154,7 @@
         </div>
     </div>
 
-    <div id="chat" class="fixed right-0 bottom-0">
+    <div id="chat" class="fixed right-0 bottom-0 chat-fade">
         <button class="dark:bg-white bg-gray-900 sm:h-10 h-10 w-10 p-2 m-2 rounded-lg 
                 relative flex items-center justify-center transform transition-transform 
                 duration-300 ease-in-out dark:hover:bg-gray-200">

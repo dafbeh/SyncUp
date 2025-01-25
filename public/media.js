@@ -2,6 +2,7 @@ let userName = "NO NAME";
 let autoSyncTimer = 5;
 let slippage = 2;
 let unreadMessages = true;
+let roomLocked = false;
 
 // Dark + Light Mode
 document.getElementById('theme').onclick = function () {
@@ -86,7 +87,7 @@ function updateTimer() {
     const time = document.querySelector('#time')
 
     setInterval(() => {
-        if (player && videoLoaded) {
+        if (player && typeof player.getCurrentTime === 'function') {
             seek.value = player.getCurrentTime()
             time.textContent =
                 '-' + timeLeft(player.getCurrentTime(), player.getDuration())
@@ -351,7 +352,7 @@ function updateUsername() {
         userName = usernameValue.value;
         usernameValue.placeholder = userName
 
-        callAlert("Username changed... " + userName);
+        callAlert("Username changed to " + userName);
         socket.emit('newName', { roomId, oldName, newName: userName })
     } else {
         callAlert("Please enter a longer username!");
@@ -379,6 +380,7 @@ function syncing() {
                 getSyncInfo(roomId, (state) => {
                     console.log((autoSyncTimer) + " has passed, scanning...")
                     console.log("difference = " + (state.videoTime - player.getCurrentTime()))
+                    console.log(videoLoaded + " video loaded")
                     if (Math.abs(state.videoTime - player.getCurrentTime()) > slippage ) {
                         player.seekTo(state.videoTime, true)
                         console.log("server time: " + state.videoTime + " player time = " + player.getCurrentTime())
@@ -417,6 +419,7 @@ function handleCheckTimer() {
 document.querySelector('#chat').addEventListener('click', () => {
     const chat = document.querySelector('#chat')
     const chatBox = document.querySelector('#chatBox')
+    chat.classList.remove("chat-fade");
 
     if (
         chatBox.classList.contains('hidden')
@@ -452,9 +455,26 @@ function handleMessage(event) {
 }
 
 function skipVideo() {
-    const url = player.getVideoUrl()
+    console.log(videoLoaded)
+    if(videoLoaded && player.getVideoUrl && typeof player.getVideoUrl === 'function') {
+        const url = player.getVideoUrl()
 
-    socket.emit('videoEnded', { room:roomId, url } )
+
+        socket.emit('videoEnded', { room:roomId, url } )
+    }
+}
+
+function lockRoom() {
+    const lock = document.getElementById('lockRoom');
+    if(!roomLocked) {
+        roomLocked = true
+        lock.src = "images/locked.svg"
+        callAlert("Room locked");
+    } else {
+        roomLocked = false
+        lock.src = "images/unlocked.svg"
+        callAlert("Room unlocked");
+    }
 }
 
 function callAlert(text) {

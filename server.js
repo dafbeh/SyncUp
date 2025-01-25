@@ -59,6 +59,8 @@ io.on('connection', (socket) => {
 
             if (roomUserList[room].length === 0) {
                 roomLeader[room] = socket.id
+                io.to(socket.id).emit('newLeader', socket.id);
+                console.log("new leader!")
             }
 
             roomUserList[room].push(socket.id)
@@ -78,7 +80,9 @@ io.on('connection', (socket) => {
 
             if (roomLeader[room] === socket.id) {
                 if (roomUserList[room].length > 0) {
+                    const id = roomUserList[room][0]
                     roomLeader[room] = roomUserList[room][0]
+                    io.to(id).emit('newLeader', id);
                 } else {
                     delete roomLeader[room]
                 }
@@ -248,7 +252,13 @@ io.on('connection', (socket) => {
 
         if (validRooms.has(roomId)) {
             if(roomUserList[roomId].includes(socket.id)) {
-                io.to(roomId).emit('changedName', {oldName, newName})
+                if(roomLeader[roomId] !== socket.id) {
+                    io.to(roomId).emit('changedName', {oldName, newName})
+                } else {
+                    const leaderOldName = "👑 " + oldName
+                    const leaderNewName = "👑 " + newName
+                    io.to(roomId).emit('changedName', {oldName:leaderOldName, newName:leaderNewName})
+                }
             }
         }
     });
@@ -258,7 +268,12 @@ io.on('connection', (socket) => {
 
         if (validRooms.has(roomId)) {
             if(roomUserList[roomId].includes(socket.id)) {
-                io.to(roomId).emit('newMessage', { name, message })
+                if(roomLeader[roomId] !== socket.id) {
+                    io.to(roomId).emit('newMessage', { name, message })
+                } else {
+                    const displayName = "👑 " + name
+                    io.to(roomId).emit('newMessage', { name:displayName, message })
+                }
             }
         }
     });
