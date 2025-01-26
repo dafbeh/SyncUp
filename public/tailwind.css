@@ -945,6 +945,10 @@ video {
   cursor: pointer;
 }
 
+.cursor-default{
+  cursor: default;
+}
+
 .select-none{
   -webkit-user-select: none;
      -moz-user-select: none;
@@ -1247,6 +1251,10 @@ video {
   color: rgb(255 255 255 / var(--tw-text-opacity, 1));
 }
 
+.accent-red-500{
+  accent-color: #ef4444;
+}
+
 .opacity-75{
   opacity: 0.75;
 }
@@ -1493,6 +1501,11 @@ video {
 .dark\:text-white:is(.dark *){
   --tw-text-opacity: 1;
   color: rgb(255 255 255 / var(--tw-text-opacity, 1));
+}
+
+.dark\:text-yellow-400:is(.dark *){
+  --tw-text-opacity: 1;
+  color: rgb(250 204 21 / var(--tw-text-opacity, 1));
 }
 
 .dark\:invert:is(.dark *){

@@ -34,6 +34,7 @@ app.get('/new-room', (req, res) => {
         currentVideo: '',
         roomQueue: [],
         uniqueId: 0,
+        isLocked: false,
     }
     res.redirect(`/${roomId}`)
 })
@@ -102,6 +103,11 @@ io.on('connection', (socket) => {
     // Send video URL to everyone in the room
     socket.on('videoUrl', (data) => {
         const { room, videoUrl } = data
+
+        if(roomStates[room].isLocked && roomLeader[room] !== socket.id) {
+            return;
+        }
+
         if (validRooms.has(room)) {
             io.to(room).emit('videoUrl', videoUrl)
             roomStates[room].currentVideo = videoUrl
@@ -113,6 +119,10 @@ io.on('connection', (socket) => {
     socket.on('videoAction', (data) => {
         const { room, action, time } = data
         const state = roomStates[room]
+
+        if(roomStates[room].isLocked && roomLeader[room] !== socket.id) {
+            return;
+        }
 
         if (validRooms.has(room)) {
             switch (action) {
@@ -184,6 +194,11 @@ io.on('connection', (socket) => {
     })
 
     socket.on('addToQueue', (room, videoUrl) => {
+
+        if(roomStates[room].isLocked && roomLeader[room] !== socket.id) {
+            return;
+        }
+
         if (validRooms.has(room)) {
             console.log("video added to queue: " + roomStates[room].roomQueue)
             const newPush = {id: roomStates[room].uniqueId++, url: videoUrl}
@@ -194,6 +209,11 @@ io.on('connection', (socket) => {
     })
 
     socket.on('removeFromQueue', (room, uniqueId) => {
+
+        if(roomStates[room].isLocked && roomLeader[room] !== socket.id) {
+            return;
+        }
+
         console.log("Attempting to remove item with id:", uniqueId);
         
         if (validRooms.has(room)) {
@@ -270,6 +290,10 @@ io.on('connection', (socket) => {
     socket.on('message', (data) => {
         const { roomId, name, message } = data;
 
+        if(message.length < 1 || message.length > 200) {
+            return;
+        }
+
         if (validRooms.has(roomId)) {
             if(roomUserList[roomId].includes(socket.id)) {
                 if(roomLeader[roomId] !== socket.id) {
@@ -281,6 +305,16 @@ io.on('connection', (socket) => {
             }
         }
     });
+
+    socket.on('lockRoom', (room, isLocked) => {
+        if(validRooms.has(room)) {
+            if(roomLeader[room] === socket.id) {
+                roomStates[room].isLocked = isLocked
+                io.to(room).emit('isLocked', isLocked)
+                console.log("is room locked? " + isLocked)
+            }
+        }
+    })
 
     socket.on('leaveMessage', (room, name) => {
         if(validRooms.has(room)) {

@@ -449,6 +449,10 @@ function handleMessage(event) {
     const messageBox = document.getElementById("messages");
     const message = document.getElementById("messageText").value;
 
+    if(message.length < 1 || message.length > 200) {
+        return;
+    } 
+
     socket.emit('message', { roomId, name:userName, message })
     document.getElementById("messageText").value = ""
 
@@ -467,14 +471,49 @@ function skipVideo() {
 
 function lockRoom() {
     const lock = document.getElementById('lockRoom');
-    if(!roomLocked) {
+    if(!roomLocked && isLeader) {
         roomLocked = true
         lock.src = "images/locked.svg"
-        callAlert("Room locked");
-    } else {
+        socket.emit('lockRoom', roomId, true)
+    } else if (roomLocked && isLeader){
         roomLocked = false
         lock.src = "images/unlocked.svg"
-        callAlert("Room unlocked");
+        socket.emit('lockRoom', roomId, false)
+    }
+}
+
+function disableButtons(state) {
+    const play = document.querySelector('#play');
+    const seek = document.querySelector('#seekBar');
+    const search = document.querySelector('#searchBar');
+    const skip = document.querySelector('#skip');
+
+    if(isLeader) {
+        return;
+    }
+
+    if(state) {
+        play.disabled = true;
+        play.classList.add('bg-red-500');
+        play.classList.remove('hover:bg-gray-600');
+
+        search.disabled = true;
+        skip.disabled = true;
+
+        seek.disabled = true;
+        seek.classList.add('accent-red-500');
+        seek.classList.add('cursor-default');
+    } else {
+        play.disabled = false;
+        play.classList.remove('bg-red-500')
+        play.classList.add('hover:bg-gray-600');
+
+        search.disabled = false;
+        skip.disabled = false;
+
+        seek.disabled = false;
+        seek.classList.remove('accent-red-500');
+        seek.classList.remove('cursor-default');
     }
 }
 

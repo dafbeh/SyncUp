@@ -101,11 +101,11 @@
   transform: scale(1.1);
 }
 
-#lock {
+#lockRoom {
   transition: transform 0.3s ease;
 }
 
-#lock:hover {
+#lockRoom:hover {
   transform: scale(1.1);
 }
 

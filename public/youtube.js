@@ -60,10 +60,44 @@ function connectToRoom(room) {
             }
         })
 
+        socket.on('isLocked', locked => {
+            const messageBox = document.getElementById('messages');
+            readMessage(false)
+
+            function sendMessage(value) {
+                messageBox
+                    .innerHTML +=
+                    `<div class="flex justify-center items-center mb-1.5"> 
+                        <span class="text-sm font-bold font-medium text-white dark:text-gray-800 mt-0 leading-tight text-center"> 
+                        Room is ` + value + `!</span> 
+                    </div>`;
+            }
+
+            if(!isLeader) {
+                disableButtons(locked)
+            }
+
+            if(locked) {
+                sendMessage("locked");
+                closeAlert()
+                callAlert("Room has been locked!")
+            } else {
+                sendMessage("unlocked");
+                closeAlert()
+                callAlert("Room has been unlocked!")
+            }
+
+        })
+
         getRoomState(roomId, (state) => {
             localState[roomId] = state
             const currentVideo = state.currentVideo
             queue = state.roomQueue
+            roomLocked = state.isLocked
+
+            if(roomLocked) {
+                disableButtons(true)
+            }
 
             if (currentVideo) {
                 embedYoutube(currentVideo)

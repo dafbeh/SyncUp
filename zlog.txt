@@ -1,5 +1,11 @@
 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
 https://github.com/Ripty/SyncUp
+
+Lightsail settings:
+pm2 start server.js
+pm2 list
+pm2 stop 0
+
 What succeeded:
     - Check Git Pushes
 
