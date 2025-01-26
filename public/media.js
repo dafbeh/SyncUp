@@ -1,4 +1,4 @@
-let userName = "NO NAME";
+let userName = "N/A";
 let autoSyncTimer = 5;
 let slippage = 2;
 let unreadMessages = true;
@@ -340,6 +340,7 @@ document.querySelector('#account').addEventListener('click', () => {
 })
 
 function updateUsername() {
+    const layout = /[^A-Za-z0-9\s_-]+$/
     const alert = document.getElementById('alertBox');
     const oldName = userName;
     const usernameValue = document.querySelector('#usernameInput');
@@ -348,13 +349,17 @@ function updateUsername() {
         closeAlert();
     }
 
-    if(usernameValue.value.length >= 3) {
-        userName = usernameValue.value;
-        usernameValue.placeholder = userName
-        document.cookie = `username=${userName}; path=/; max-age=${60 * 60 * 24 * 30}`;
+    if(layout.test(usernameValue.value)) {
+        callAlert("Only use letters and numbers!")
+        return;
+    }
 
-        callAlert("Username changed to " + userName);
-        socket.emit('newName', { roomId, oldName, newName: userName })
+    if(usernameValue.value.length >= 3 || !usernameValue.value === userName) {
+        usernameValue.placeholder = usernameValue.value
+
+        document.cookie = `username=${usernameValue.value}; path=/; max-age=${60 * 60 * 24 * 30}`;
+
+        socket.emit('newName', { roomId, oldName, newName: usernameValue.value.trim(), isNew: false })
     } else {
         callAlert("Please enter a longer username!");
     }
@@ -453,7 +458,7 @@ function handleMessage(event) {
         return;
     } 
 
-    socket.emit('message', { roomId, name:userName, message })
+    socket.emit('message', { roomId, message })
     document.getElementById("messageText").value = ""
 
     messageBox.scrollTop = messageBox.scrollHeight;

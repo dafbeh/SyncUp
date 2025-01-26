@@ -44,9 +44,9 @@ function connectToRoom(room) {
             const value = `; ${document.cookie}`;
             const parts = value.split(`; username=`);
             if (parts.length === 2) {
-                userName = parts.pop().split(';').shift();
-                document.querySelector('#usernameInput').value = userName
-                socket.emit('joinMessage', room, userName)
+                let cookieName = parts.pop().split(';').shift();
+                let socketId = socket.id
+                socket.emit('newName', { roomId, oldName: socketId, newName: cookieName, isNew: true })
             }
         } else {
             socket.emit('joinMessage', room, socket.id)
@@ -184,9 +184,21 @@ function connectToRoom(room) {
     })
 
     socket.on('changedName', (data) => {
-        const { oldName, newName } = data;
-        const messageBox = document.getElementById('messages');
+        const { newName, isNew } = data;
+        userName = newName;
+        document.querySelector('#usernameInput').value = userName
+        callAlert("Username changed to " + newName);
         readMessage(false)
+
+        if(isNew) {
+            socket.emit('joinMessage', room, userName)
+            return;
+        }
+    })
+
+    socket.on('newNameMessage', (data) => {
+        const { oldName, newName, isNew } = data;
+        const messageBox = document.getElementById('messages');
 
         messageBox
         .innerHTML +=
@@ -198,6 +210,7 @@ function connectToRoom(room) {
 
     socket.on('newMessage', (data) => {
         const { name, message } = data;
+        console.log(name + message)
         const messageBox = document.getElementById('messages');
         messagesRead = false;
         readMessage(false)

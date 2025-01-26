@@ -63,7 +63,7 @@ io.on('connection', (socket) => {
                 io.to(socket.id).emit('newLeader', socket.id);
             }
 
-            roomUserList[room].push(socket.id)
+            roomUserList[room].push({id: socket.id, name: socket.id})
             console.log(socket.id + ' connected to ' + room)
         } else {
             socket.emit('Room not found')
@@ -73,18 +73,16 @@ io.on('connection', (socket) => {
 
     socket.on('disconnect', () => {
         socket.joinedRooms.forEach((room) => {
-            const userIndex = roomUserList[room].indexOf(socket.id)
+            const userIndex = roomUserList[room].findIndex(user => user.id === socket.id)
             if (userIndex !== -1) {
                 roomUserList[room].splice(userIndex, 1)
             }
 
             if (roomLeader[room] === socket.id) {
                 if (roomUserList[room].length > 0) {
-                    const id = roomUserList[room][0]
-                    roomLeader[room] = roomUserList[room][0]
+                    const id = roomUserList[room][0].id
+                    roomLeader[room] = id
                     io.to(id).emit('newLeader', id);
-                } else {
-                    delete roomLeader[room]
                 }
             }
 
@@ -260,42 +258,61 @@ io.on('connection', (socket) => {
     });
 
     // Chat Settings
-    socket.on('joinMessage', (room, name) => {
+    socket.on('joinMessage', (room) => {
+        const name = roomUserList[room].find(user => user.id === socket.id)?.name;
         if (validRooms.has(room)) {
-            if(roomLeader[room] !== socket.id) {
-                io.to(room).emit('whoJoined', name)
-            } else {
-                const leaderName = "👑 " + name
-                io.to(room).emit('whoJoined', leaderName)
-            }
+            io.to(room).emit('whoJoined', name)
         }
     });
 
     socket.on('newName', (data) => {
-        const { roomId, oldName, newName } = data;
-
+        const { roomId, oldName, newName, isNew } = data;
+        const layout = /[^A-Za-z0-9\s_-]/;
+        const user = roomUserList[roomId].find(user => user.id === socket.id);
+    
+        if (layout.test(newName) && !(roomLeader[roomId] === socket.id)) {
+            return;
+        }
+    
+        var int = 0;
+        var displayName = newName.trim();
+        function recursiveNewName() {
+            if (roomUserList[roomId].some(user => user.name.toLowerCase() === displayName.toLowerCase())) {
+                int++;
+                displayName = newName + int;
+                return recursiveNewName();
+            } else {
+                return displayName;
+            }
+        }
+    
+        if (roomUserList[roomId].some(user => user.name.toLowerCase() === newName.toLowerCase())) {
+            recursiveNewName();
+        }
+    
         if (validRooms.has(roomId)) {
-            if(roomUserList[roomId].includes(socket.id)) {
-                if(roomLeader[roomId] !== socket.id) {
-                    io.to(roomId).emit('changedName', {oldName, newName})
-                } else {
-                    const leaderOldName = "👑 " + oldName
-                    const leaderNewName = "👑 " + newName
-                    io.to(roomId).emit('changedName', {oldName:leaderOldName, newName:leaderNewName})
+            if (roomUserList[roomId].find(user => user.id === socket.id)) {
+                user.name = displayName;
+                socket.emit('changedName', { newName: displayName, isNew });
+    
+                if (!isNew) {
+                    io.to(roomId).emit('newNameMessage', { oldName, newName: displayName, isNew });
                 }
             }
         }
     });
+    
 
     socket.on('message', (data) => {
-        const { roomId, name, message } = data;
+        const { roomId, message } = data
+        const name = roomUserList[roomId].find(user => user.id === socket.id)?.name;
 
         if(message.length < 1 || message.length > 200) {
             return;
         }
 
         if (validRooms.has(roomId)) {
-            if(roomUserList[roomId].includes(socket.id)) {
+            if(roomUserList[roomId].some(user => user.id === socket.id)) {
                 if(roomLeader[roomId] !== socket.id) {
                     io.to(roomId).emit('newMessage', { name, message })
                 } else {
@@ -311,19 +328,15 @@ io.on('connection', (socket) => {
             if(roomLeader[room] === socket.id) {
                 roomStates[room].isLocked = isLocked
                 io.to(room).emit('isLocked', isLocked)
-                console.log("is room locked? " + isLocked)
             }
         }
     })
 
-    socket.on('leaveMessage', (room, name) => {
+    socket.on('leaveMessage', (room) => {
+        const name = roomUserList[room].find(user => user.id === socket.id)?.name;
+
         if(validRooms.has(room)) {
-            if(roomLeader[room] !== socket.id) {
-                io.to(room).emit('whoLeft', name)
-            } else {
-                const leaderName = "👑 " + name
-                io.to(room).emit('whoLeft', leaderName)
-            }
+            io.to(room).emit('whoLeft', name)
         }
     })
 })
