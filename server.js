@@ -73,6 +73,13 @@ io.on('connection', (socket) => {
 
     socket.on('disconnect', () => {
         socket.joinedRooms.forEach((room) => {
+            
+            if(validRooms.has(room)) {
+                const name = roomUserList[room].find(user => user.id === socket.id)?.name;
+                const count = roomUserList[room].length - 1;
+                io.to(room).emit('whoLeft', name, count)
+            }
+
             const userIndex = roomUserList[room].findIndex(user => user.id === socket.id)
             if (userIndex !== -1) {
                 roomUserList[room].splice(userIndex, 1)
@@ -330,15 +337,6 @@ io.on('connection', (socket) => {
                 roomStates[room].isLocked = isLocked
                 io.to(room).emit('isLocked', isLocked)
             }
-        }
-    })
-
-    socket.on('leaveMessage', (room) => {
-        const name = roomUserList[room].find(user => user.id === socket.id)?.name;
-        const count = 0;
-
-        if(validRooms.has(room)) {
-            io.to(room).emit('whoLeft', name, count)
         }
     })
 })

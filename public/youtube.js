@@ -22,7 +22,6 @@ document.addEventListener('DOMContentLoaded', () => {
 })
 
 window.addEventListener('beforeunload', () => {
-    socket.emit('leaveMessage', roomId, userName);
     socket.disconnect();
 })
 
@@ -56,7 +55,6 @@ function connectToRoom(room) {
             if(socket.id === id) {
                 isLeader = true;
                 document.getElementById('lockRoom').classList.remove("hidden");
-                callAlert("You are the room leader!")
             }
         })
 
@@ -114,6 +112,7 @@ function connectToRoom(room) {
     socket.on('videoUrl', (url) => {
         canSeek = false
         loadedVideoUrl = url
+        document.getElementById('volumeR').value = 0;
         embedYoutube(url)
     })
 
@@ -188,12 +187,13 @@ function connectToRoom(room) {
         const { newName, isNew } = data;
         userName = newName;
         document.querySelector('#usernameInput').value = userName
-        callAlert("Username changed to " + newName);
         readMessage(false)
 
         if(isNew) {
             socket.emit('joinMessage', room, userName)
             return;
+        } else {
+            callAlert("Username changed to " + newName);
         }
     })
 
@@ -228,7 +228,7 @@ function connectToRoom(room) {
 
     socket.on('whoLeft', (name, count) => {
         const messageBox = document.getElementById('messages');
-        document.getElementById('userCount').textContent = count-1;
+        document.getElementById('userCount').textContent = count;
         readMessage(false)
 
         messageBox

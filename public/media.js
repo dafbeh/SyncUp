@@ -321,6 +321,7 @@ function resetControls() {
     const time = document.querySelector('#time')
     const videoTitle = document.querySelector('#videoTitleText')
     const waiting = document.getElementById('waiting')
+    const mute = document.getElementById('#volumeR')
 
     seek.value = 0
     time.textContent = "00:00"

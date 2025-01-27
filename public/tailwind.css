@@ -1315,16 +1315,30 @@ video {
 }
 
 ::-webkit-scrollbar-track {
-  background: #353535;
+  background: #111827;
   border-radius: 5px;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #ffffff;
+  background: #bfbfbf;
   border-radius: 5px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
+  background: #848484;
+}
+
+.dark ::-webkit-scrollbar-track {
+  background: #000000;
+  border-radius: 5px;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: #ffffff;
+  border-radius: 5px;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
   background: #b8b8b8;
 }
 
