@@ -682,6 +682,10 @@ video {
   top: 3rem;
 }
 
+.top-3{
+  top: 0.75rem;
+}
+
 .z-50{
   z-index: 50;
 }
@@ -721,6 +725,10 @@ video {
   margin-left: 0.5rem;
 }
 
+.ml-px{
+  margin-left: 1px;
+}
+
 .mr-2{
   margin-right: 0.5rem;
 }
@@ -747,6 +755,10 @@ video {
 
 .mt-2{
   margin-top: 0.5rem;
+}
+
+.mt-4{
+  margin-top: 1rem;
 }
 
 .mt-5{
@@ -798,6 +810,10 @@ video {
   height: 8rem;
 }
 
+.h-5{
+  height: 1.25rem;
+}
+
 .h-5\/6{
   height: 83.333333%;
 }
@@ -810,12 +826,12 @@ video {
   height: 2rem;
 }
 
-.h-9{
-  height: 2.25rem;
+.h-8\.5\/10{
+  height: 85%;
 }
 
-.h-9\/10{
-  height: 90%;
+.h-9{
+  height: 2.25rem;
 }
 
 .h-96{

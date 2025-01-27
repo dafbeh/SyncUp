@@ -171,8 +171,9 @@ function connectToRoom(room) {
         renderQueue(queue)
     })
 
-    socket.on('whoJoined', (name) => {
+    socket.on('whoJoined', (name, count) => {
         const messageBox = document.getElementById('messages');
+        document.getElementById('userCount').textContent = count;
         readMessage(false)
 
         messageBox
@@ -225,8 +226,9 @@ function connectToRoom(room) {
         messageBox.scrollTop = messageBox.scrollHeight; // Set box to bottom
     })
 
-    socket.on('whoLeft', (name) => {
+    socket.on('whoLeft', (name, count) => {
         const messageBox = document.getElementById('messages');
+        document.getElementById('userCount').textContent = count-1;
         readMessage(false)
 
         messageBox

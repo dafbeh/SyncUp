@@ -261,7 +261,8 @@ io.on('connection', (socket) => {
     socket.on('joinMessage', (room) => {
         const name = roomUserList[room].find(user => user.id === socket.id)?.name;
         if (validRooms.has(room)) {
-            io.to(room).emit('whoJoined', name)
+            const count = roomUserList[room].length
+            io.to(room).emit('whoJoined', name, count)
         }
     });
 
@@ -334,9 +335,10 @@ io.on('connection', (socket) => {
 
     socket.on('leaveMessage', (room) => {
         const name = roomUserList[room].find(user => user.id === socket.id)?.name;
+        const count = 0;
 
         if(validRooms.has(room)) {
-            io.to(room).emit('whoLeft', name)
+            io.to(room).emit('whoLeft', name, count)
         }
     })
 })
