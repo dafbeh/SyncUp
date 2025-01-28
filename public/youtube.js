@@ -239,6 +239,15 @@ function connectToRoom(room) {
             </div>`;
     })
 
+    socket.on('banned', (reason) => {
+        const body = document.getElementById('body')
+        console.log("you've been banned")
+
+        body.classList.add("text-white")
+        body.classList.add("text-2xl")
+        body.innerHTML = reason
+    })
+
     initializeSearch()
 }
 

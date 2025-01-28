@@ -14,6 +14,7 @@ const validRooms = new Set()
 const roomLeader = {}
 const roomUserList = {}
 const roomStates = {}
+const banList = {}
 
 app.use(express.static('public'))
 
@@ -27,6 +28,7 @@ app.get('/new-room', (req, res) => {
     const roomId = uuidv4()
     validRooms.add(roomId)
     roomUserList[roomId] = []
+    banList[roomId] = []
     roomStates[roomId] = {
         isPlaying: true,
         videoTime: 0,
@@ -54,8 +56,17 @@ io.on('connection', (socket) => {
     socket.joinedRooms = []
 
     socket.on('joinRoom', (room) => {
+        const ip = 
+            socket.handshake.headers['x-forwarded-for'];
+
         if (validRooms.has(room)) {
             socket.join(room)
+
+            if(banList[room].includes(ip)) {
+                socket.emit('banned', "You've been banned from this room.")
+                socket.disconnect()
+            }
+
             socket.joinedRooms.push(room)
 
             if (roomUserList[room].length === 0) {
@@ -97,6 +108,7 @@ io.on('connection', (socket) => {
                 validRooms.delete(room)
                 delete roomLeader[room]
                 delete roomUserList[room]
+                delete banList[room]
                 delete roomStates[room]
                 console.log(`Room ${room} has been removed`)
             }
@@ -324,6 +336,13 @@ io.on('connection', (socket) => {
                 if(roomLeader[roomId] !== socket.id) {
                     io.to(roomId).emit('newMessage', { name, message })
                 } else {
+
+                    if(message.includes("/ban")) {
+                        const banName = message.replace("/ban ", '').trim();
+                        banUser(roomId, banName, socket.id);
+                        return;
+                    }
+
                     const displayName = "👑 " + name
                     io.to(roomId).emit('newMessage', { name:displayName, message })
                 }
@@ -338,5 +357,28 @@ io.on('connection', (socket) => {
                 io.to(room).emit('isLocked', isLocked)
             }
         }
-    })
+    });
+
+    socket.on('ban', (data) => {
+        const { room, name } = data;
+
+        banUser(room, name, socket.id)
+    });
 })
+
+function banUser(room, name, sender) {
+    console.log("banning " + name)
+
+    const user = roomUserList[room].find(user => user.name === name);
+    const bannedUser = io.sockets.sockets.get(user.id);
+    const ip = bannedUser.handshake.headers['x-forwarded-for'];
+
+    if (validRooms.has(room)) {
+        if (roomLeader[room] === sender) {
+            banList[room].push(ip);
+            bannedUser.emit('banned', "You've been banned from this room.");
+            bannedUser.disconnect();
+
+        }
+    }
+}
