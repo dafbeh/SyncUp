@@ -25,6 +25,14 @@ window.addEventListener('beforeunload', () => {
     socket.disconnect();
 })
 
+function generateIdentify() {
+    const tempIdentifier = socket.id.substring(0,5) + Date.now();
+    document.cookie = `identifier=${tempIdentifier}; path=/; max-age=${60 * 60 * 24 * 30}`;
+    identifier = tempIdentifier;
+
+    socket.emit('cookie', ({ roomId, identifier }))
+}
+
 // Connect to the WebSocket server
 function connectToRoom(room) {
     if (socket) {
@@ -34,6 +42,7 @@ function connectToRoom(room) {
     socket = io()
     socket.on('connect', () => {
         console.log('Connected to WebSocket server for room: ' + room)
+
         socket.emit('joinRoom', room)
         userName = socket.id
         updateTimer()
@@ -41,14 +50,23 @@ function connectToRoom(room) {
 
         if(document.cookie) {
             const value = `; ${document.cookie}`;
-            const parts = value.split(`; username=`);
+            const parts = value.split(`; identifier=`);
             if (parts.length === 2) {
-                let cookieName = parts.pop().split(';').shift();
+                let cookie = parts.pop().split(';').shift();
+                identifier = cookie;
+                console.log(identifier)
+                socket.emit('cookie', ({ roomId, identifier }))
+            }
+            const value2 = `; ${document.cookie}`;
+            const parts2 = value2.split(`; username=`);
+            if (parts2.length === 2) {
+                let cookieName = parts2.pop().split(';').shift();
                 let socketId = socket.id
                 socket.emit('newName', { roomId, oldName: socketId, newName: cookieName, isNew: true })
             }
         } else {
-            socket.emit('joinMessage', room, socket.id)
+            socket.emit('joinMessage', room, userName)
+            generateIdentify()
         }
 
         socket.on('newLeader', (id) => {

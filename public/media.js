@@ -1,4 +1,5 @@
 let userName = "N/A";
+let identifier = null;
 let autoSyncTimer = 5;
 let slippage = 2;
 let unreadMessages = true;

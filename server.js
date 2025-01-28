@@ -56,17 +56,8 @@ io.on('connection', (socket) => {
     socket.joinedRooms = []
 
     socket.on('joinRoom', (room) => {
-        const ip = 
-            socket.handshake.headers['x-forwarded-for'];
-
         if (validRooms.has(room)) {
             socket.join(room)
-
-            if(banList[room].includes(ip)) {
-                socket.emit('banned', "You've been banned from this room.")
-                socket.disconnect()
-            }
-
             socket.joinedRooms.push(room)
 
             if (roomUserList[room].length === 0) {
@@ -79,6 +70,25 @@ io.on('connection', (socket) => {
         } else {
             socket.emit('Room not found')
             socket.disconnect()
+        }
+    })
+
+    socket.on('cookie', (data) => {
+        const { roomId, identifier } = data
+
+        if(validRooms.has(roomId)) {
+            const user = roomUserList[roomId].find(user => user.id === socket.id);
+
+            if(user) {
+                user.cookie = identifier;
+                console.log(roomUserList[roomId])
+
+                if(banList[roomId].find(user => user.cookie === identifier)) {
+                    socket.emit('banned', "You've been banned from this room.")
+                    console.log(banList[roomId])
+                    socket.disconnect()
+                }
+            }
         }
     })
 
@@ -341,6 +351,13 @@ io.on('connection', (socket) => {
                         const banName = message.replace("/ban ", '').trim();
                         banUser(roomId, banName, socket.id);
                         return;
+                    } else if(message.includes("/unban")) {
+                        const unBanName = message.replace("/unban ", '').trim();
+                        const unban = banList[roomId].findIndex(user => user.name === unBanName);
+                        if(unban > -1) {
+                            banList[roomId].splice(unban,1);
+                        }
+                        return;
                     }
 
                     const displayName = "👑 " + name
@@ -367,15 +384,18 @@ io.on('connection', (socket) => {
 })
 
 function banUser(room, name, sender) {
-    console.log("banning " + name)
-
     const user = roomUserList[room].find(user => user.name === name);
+
+    if(!user) {
+        return;
+    }
+
     const bannedUser = io.sockets.sockets.get(user.id);
-    const ip = bannedUser.handshake.headers['x-forwarded-for'];
+    const cookie = user.cookie
 
     if (validRooms.has(room)) {
         if (roomLeader[room] === sender) {
-            banList[room].push(ip);
+            banList[room].push( { cookie, name } );
             bannedUser.emit('banned', "You've been banned from this room.");
             bannedUser.disconnect();
 
