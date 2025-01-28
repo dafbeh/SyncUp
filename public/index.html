@@ -8,7 +8,21 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+
     <div id="welcome" class="h-screen bg-[#d2d3db] select-none sm:pt-12 flex flex-col dark:bg-[#0f0f0f]">
+        <div class="sm:absolute sm:top-0 sm:right-0 bg-[#0f0f0f] justify-center w-full p-2">
+            <div id="codeBar"
+                class="flex items-center bg-gray-100 0 p-2
+                    sm:w-[100px] w-full rounded-lg shadow-lg transition-all duration-300 
+                    ease-in-out sm:focus-within:w-[200px]">
+                <form onsubmit="return false;" id="codeForm" class="flex items-center justify-between w-full" autocomplete="off">
+                    <input type="text" id="codeText"
+                        class="text-black text-center sm:text-left p-1 w-full bg-transparent focus:outline-none rounded-lg"
+                        placeholder="Enter code" maxlength="7" onchange="handleCode()">
+                </form>
+            </div>
+        </div>
+
         <div class="sm:flex w-full h-5/6">
             <div id="leftSide" class="sm:w-1/2 w-full flex sm:justify-end justify-center items-center">
                 <img id="bigLogo" alt="sync up logo" class="sm:w-[700px] h-1/4 sm:h-[700px] h-1/4 dark:invert" src="images/logo.svg" draggable="false"> 
@@ -45,6 +59,21 @@
         const logo = document.getElementById("bigLogo");
         logo.style.transform = "rotate(" + window.pageYOffset/4 + "deg)";
     };
+
+    function handleCode() {
+        let code = document.getElementById('codeText').value;
+
+        if(code.length < 7) {
+            return;
+        }
+
+        if((/\s/).test(code)) {
+            code = code.replace(" ", '-')
+        }
+
+        window.location.href = code;
+    }
+
     </script>
 </body>
 </html>

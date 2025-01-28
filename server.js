@@ -6,7 +6,6 @@ const io = require('socket.io')(server)
 const path = require('path')
 const { v4: uuidv4 } = require('uuid')
 
-// Configure the server
 const PORT = process.env.PORT || 3000
 
 // Store the information about the rooms
@@ -23,23 +22,57 @@ server.listen(PORT, '0.0.0.0', () => {
     console.log('Server is running on port ' + PORT)
 })
 
-// Routes
-app.get('/new-room', (req, res) => {
-    const roomId = uuidv4()
-    validRooms.add(roomId)
-    roomUserList[roomId] = []
-    banList[roomId] = []
-    roomStates[roomId] = {
-        isPlaying: true,
-        videoTime: 0,
-        lastEvent: Date.now(),
-        currentVideo: '',
-        roomQueue: [],
-        uniqueId: 0,
-        isLocked: false,
+async function getRoomWords() {
+    const url = "https://random-word-api.herokuapp.com/word?number=2&length=3";
+    try {
+        let roomId;
+        let unique = false;
+
+        while (!unique) {
+            const response = await fetch(url);
+
+            if (!response.ok) {
+                console.log("ERROR WITH RANDOM WORD GENERATOR, FALLBACK");
+                return uuidv4();
+            }
+
+            const json = await response.json();
+            roomId = json[0] + "-" + json[1];
+
+            if (!validRooms.has(roomId)) {
+                unique = true;
+            }
+        }
+        return roomId;
+    } catch (error) {
+        console.error("Error in API:", error.message);
+        return uuidv4();
     }
-    res.redirect(`/${roomId}`)
-})
+}
+
+// Routes
+app.get('/new-room', async (req, res) => {
+    try {
+        const roomId = await getRoomWords();
+        validRooms.add(roomId);
+        roomUserList[roomId] = [];
+        banList[roomId] = [];
+        roomStates[roomId] = {
+            isPlaying: true,
+            videoTime: 0,
+            lastEvent: Date.now(),
+            currentVideo: '',
+            roomQueue: [],
+            uniqueId: 0,
+            isLocked: false,
+        };
+        res.redirect(`/${roomId}`);
+    } catch (error) {
+        console.error(error.message);
+        res.status(500).json({ success: false, error: 'Failed to create a new room.' });
+    }
+});
+
 
 app.get('/:room', (req, res) => {
     const roomId = req.params.room
@@ -47,7 +80,7 @@ app.get('/:room', (req, res) => {
     if (validRooms.has(roomId)) {
         res.sendFile(path.join(__dirname, 'public', 'room.html'))
     } else {
-        res.status(404).send('Room not found')
+        res.redirect(`/`);
     }
 })
 
@@ -81,7 +114,6 @@ io.on('connection', (socket) => {
 
             if(user) {
                 user.cookie = identifier;
-                console.log(roomUserList[roomId])
 
                 if(banList[roomId].find(user => user.cookie === identifier)) {
                     socket.emit('banned', "You've been banned from this room.")
@@ -142,7 +174,6 @@ io.on('connection', (socket) => {
         }
     })
 
-    // Broadcast video action to the room
     socket.on('videoAction', (data) => {
         const { room, action, time } = data
         const state = roomStates[room]
@@ -304,8 +335,8 @@ io.on('connection', (socket) => {
             return;
         }
     
-        var int = 0;
-        var displayName = newName.trim();
+        let int = 0;
+        let displayName = newName.trim();
         function recursiveNewName() {
             if (roomUserList[roomId].some(user => user.name.toLowerCase() === displayName.toLowerCase())) {
                 int++;

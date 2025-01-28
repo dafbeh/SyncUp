@@ -1077,6 +1077,11 @@ video {
   border-color: rgb(107 114 128 / var(--tw-border-opacity, 1));
 }
 
+.bg-\[\#0f0f0f\]{
+  --tw-bg-opacity: 1;
+  background-color: rgb(15 15 15 / var(--tw-bg-opacity, 1));
+}
+
 .bg-\[\#d2d3db\]{
   --tw-bg-opacity: 1;
   background-color: rgb(210 211 219 / var(--tw-bg-opacity, 1));
@@ -1549,6 +1554,18 @@ video {
 }
 
 @media (min-width: 640px){
+  .sm\:absolute{
+    position: absolute;
+  }
+
+  .sm\:right-0{
+    right: 0px;
+  }
+
+  .sm\:top-0{
+    top: 0px;
+  }
+
   .sm\:ml-32{
     margin-left: 8rem;
   }
@@ -1581,12 +1598,24 @@ video {
     width: 16rem;
   }
 
+  .sm\:w-\[110px\]{
+    width: 110px;
+  }
+
   .sm\:w-\[425px\]{
     width: 425px;
   }
 
   .sm\:w-\[700px\]{
     width: 700px;
+  }
+
+  .sm\:w-\[105px\]{
+    width: 105px;
+  }
+
+  .sm\:w-\[100px\]{
+    width: 100px;
   }
 
   .sm\:justify-end{
@@ -1599,6 +1628,10 @@ video {
 
   .sm\:pt-12{
     padding-top: 3rem;
+  }
+
+  .sm\:text-left{
+    text-align: left;
   }
 
   .sm\:text-4xl{
@@ -1614,6 +1647,10 @@ video {
   .sm\:text-xl{
     font-size: 1.25rem;
     line-height: 1.75rem;
+  }
+
+  .sm\:focus-within\:w-\[200px\]:focus-within{
+    width: 200px;
   }
 }
 
