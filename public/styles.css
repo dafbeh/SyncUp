@@ -63,8 +63,29 @@
   animation: fade-up 1s 0.1s ease-in-out;
 }
 
+#otherHalf > * {
+  animation: fade-up 1s 0.1s ease-in-out;
+}
+
 #downArrow {
   animation: fade-down 1s 0.1s ease-in-out;
+}
+
+#arrow {
+  transition: transform 0.3s ease;
+}
+
+#arrow:hover {
+  transform: scale(1.1);
+}
+
+#arrowUp {
+  opacity: 40%;
+  transition: transform 0.3s ease;
+}
+
+#arrowUp:hover {
+  transform: scaleY(-1) scale(1.1)
 }
 
 #topBar {

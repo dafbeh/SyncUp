@@ -35,3 +35,17 @@
 .dark ::-webkit-scrollbar-thumb:hover {
     background: #b8b8b8;
 }
+
+.home ::-webkit-scrollbar-track {
+    background: #000000;
+    border-radius: 0px;
+}
+
+.home ::-webkit-scrollbar-thumb {
+    background: #ffffff;
+    border-radius: 0px;
+}
+
+.home ::-webkit-scrollbar-thumb:hover {
+    background: #b8b8b8;
+}

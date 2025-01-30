@@ -4,13 +4,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SyncUp - Connected</title>
+    <title>SyncUp • Connected</title>
     <link rel="stylesheet" href="tailwind.css">
     <link rel="stylesheet" href="styles.css">
 </head>
 
 <body id="body" class="h-screen bg-white flex flex-col dark:bg-[#0f0f0f]">
-    <div id="topBar" class="bg-white select-none flex justify-between items-center h-12 w-full dark:bg-[#0f0f0f]">
+    <div id="topBar" class="bg-white flex justify-between items-center h-12 w-full dark:bg-[#0f0f0f] select-none">
         <div class="flex">
             <img id="logo" class="w-12 h-12 dark:invert cursor-pointer" alt="SyncUp" src="images/logo.svg" draggable="false"
                 onclick="window.location.href='/'">
@@ -42,7 +42,7 @@
                     after:content-[''] after:absolute after:top-[2px] after:start-[2px] 
                     after:bg-white after:border-gray-300 after:border after:rounded-full 
                     after:h-5 after:w-5 after:transition-all dark:border-gray-600 
-                    peer-checked:bg-blue-600"></div> <!-- Taken from flowbite.com--> 
+                    peer-checked:bg-blue-600"></div> <!-- Inspired from flowbite.com--> 
                     <span class="ms-3 text-sm font-medium text-white dark:text-gray-900">Auto Sync</span>
                 </label>
                 <br>
@@ -72,11 +72,11 @@
                 </form>
             </div>
         </div>
-        <div class="flex max-h-full grow-0 w-full justify-center items-start space-x-4">
+        <div class="flex max-h-full grow-0 w-full justify-center items-start space-x-4 p-2">
             <div id="videoBox"
-                class="4xl:w-2/3 3xl:w-1100 w-2/3 aspect-video bg-gray-900 dark:bg-black flex justify-center items-center rounded-lg overflow-hidden shadow-lg">
-                <p id="waiting" class="text-white absolute text-2xl">...</p>
-                <div id="iframe" class="w-full h-full">
+                class="4xl:w-2/3 3xl:w-1100 w-full aspect-video bg-gray-900 dark:bg-black flex justify-center items-center rounded-lg overflow-hidden shadow-lg">
+                <p id="waiting" class="text-white absolute text-2xl select-none">...</p>
+                <div id="iframe" class="w-full h-full slect-none">
             </div>
         </div>
             <div id="queueContainer" class="hidden sm:block overflow-y-auto h-full 4xl:w-96 sm:w-64 bg-gray-900 dark:bg-black rounded-lg px-2">

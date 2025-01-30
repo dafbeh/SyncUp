@@ -1,15 +1,15 @@
 <!DOCTYPE html>
-<html lang="en" id="htmlTheme" class="dark">
+<html lang="en" id="htmlTheme" class="home">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SyncUp - Synchronized Streaming</title>
+    <title>SyncUp • Synchronized Streaming</title>
     <link rel="stylesheet" href="tailwind.css">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
-    <div id="welcome" class="h-screen bg-[#d2d3db] select-none sm:pt-12 flex flex-col dark:bg-[#0f0f0f]">
+    <div id="welcome" class="h-screen bg-[#0f0f0f] select-none sm:pt-12 flex flex-col overflow-hidden">
         <div class="sm:absolute sm:top-0 sm:right-0 bg-[#0f0f0f] justify-center w-full p-2">
             <div id="codeBar"
                 class="flex items-center bg-gray-100 0 p-2
@@ -25,29 +25,87 @@
 
         <div class="sm:flex w-full h-5/6">
             <div id="leftSide" class="sm:w-1/2 w-full flex sm:justify-end justify-center items-center">
-                <img id="bigLogo" alt="sync up logo" class="sm:w-[700px] h-1/4 sm:h-[700px] h-1/4 dark:invert" src="images/logo.svg" draggable="false"> 
+                <img id="bigLogo" alt="sync up logo" class="sm:w-[700px] h-1/4 sm:h-[700px] h-1/4 invert" src="images/logo.svg" draggable="false"> 
             </div>
 
             <div id="rightSide" class="mx-auto my-auto sm:ml-32 flex flex-col justify-center items-center">
-                <h1 class="dark:text-white font-bold font-sans sm:text-9xl text-8xl">SyncUp</h1>
-                <button class="sm:w-[425px] w-screen h-[80px] mt-12 shadow-lg bg-white sm:rounded-lg font-bold font-sans text-xl hover:bg-gray-300 flex items-center justify-center text-center box-border" 
-                        onclick="window.location.href='/new-room'">
-                    Create Room
-                </button>
+                <h1 class="text-white font-bold font-sans sm:text-9xl text-8xl">SyncUp</h1>
+                <div class="w-full flex items-center justify-center"> 
+                    <button class="z-2 sm:w-full w-screen h-28 mt-12 shadow-lg bg-white sm:rounded-lg font-bold font-sans text-xl hover:bg-gray-300 flex items-center justify-center text-center box-border" 
+                            onclick="window.location.href='/new-room'">
+                        Create Room
+                    </button>
+                </div>
             </div>
         </div>
 
-        <div id="downArrow" class="flex justify-center">
-            <img alt="arrow" class="w-32 h-32 mt-22 dark:invert cursor-pointer" 
+        <div id="downArrow" class="sticky overflow-hidden z-1 flex justify-center">
+            <img id="arrow" alt="arrow" class="w-32 h-32 invert cursor-pointer" 
                 onClick="window.scrollTo({left:0, top:document.body.scrollHeight, behavior:'smooth'})" 
                 src="images/arrow.svg" draggable="false">
         </div>
-
     </div>
 
-    <div class="h-screen bg-white">
-        <div class="flex justify-center">
-            <h1 class="sm:text-4xl text-3xl font-bold font-opensans p-4">How to use SyncUp:</h1>
+    <div id="otherHalf" class="h-screen bg-gray-100 flex flex-col select-none">
+        <div id="upArrow" class="flex justify-center">
+            <img id="arrowUp" alt="arrow" class="w-32 h-32 mt-2 cursor-pointer scale-y-[-1]" 
+                onClick="window.scrollTo({left: 0, top: 0, behavior: 'smooth'})"
+                src="images/logo.svg" draggable="false">
+        </div>
+
+        <div class="flex justify-center mb-5">
+            <div class="text-center items-center">
+                <h1 class="sm:text-4xl text-3xl font-bold font-opensans">Get Started</h1>
+                <p class="text-l text-center mt-1">
+                    Enjoy simultaneous synchronisation together
+                </p>
+            </div>
+            
+        </div>
+    
+        <!-- Tutorial Boxes -->
+        <div class="flex-1 flex md:items-center justify-center w-full">
+            <div class="md:mb-40 h-full w-full sm:flex md:space-x-32 space-y-1 md:space-y-0 justify-center items-center p-2 pt-0">
+                <div class="bg-white border shadow-lg rounded-lg mx-auto md:mx-0 md:w-96 w-full h-64 p-2">
+                    <div class="flex flex-col items-center font-opensan w-full h-full">
+                        <h class="font-bold aboslute top-0 right-1/2 text-3xl">1.</h>
+                        <div class="my-auto mt-10 p-3">
+                            <p class="font-semibold text-xl text-center">Create a room</p>
+                            <p class="text-l text-center">
+                                Start a new session as a room leader,
+                                edit your settings under the account button.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white border shadow-lg rounded-lg mx-auto md:mx-0 md:w-96 w-full h-64 p-2">
+                    <div class="flex flex-col items-center font-opensan w-full h-full">
+                        <h class="font-bold aboslute top-0 right-1/2 text-3xl">2.</h>
+                        <div class="my-auto mt-8 p-3">
+                            <p class="font-semibold text-xl text-center">Share the URL or Code</p>
+                            <p class="text-l text-center">
+                                Every room has a unique 3-letter code (e.g., vid-bin).
+                                Share the URL or the two words with a friend to get them SyncedUp!
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white border shadow-lg rounded-lg mx-auto md:mx-0 md:w-96 w-full h-64 p-2">
+                    <div class="flex flex-col items-center font-opensan w-full h-full">
+                        <h class="font-bold aboslute top-0 right-1/2 text-3xl">3.</h>
+                        <div class="my-auto mt-10 p-3">
+                            <p class="font-semibold text-xl text-center">Start Streaming</p>
+                            <p class="text-l text-center">
+                                Find a YouTube video to watch, copy the URL into SyncUp,
+                                and enjoy synchronised streaming.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
         </div>
     </div>
 
