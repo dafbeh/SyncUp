@@ -65,35 +65,36 @@ document.querySelector('#play').onclick = function () {
     })
 }
 
-// Functionality for seek bar
-document.querySelector('#seekBar').addEventListener('input', (event) => {
-    isSeeking = true;
+// Seek bar functionality
+const seekBar = document.querySelector('#seekBar');
 
-    if (player && canSeek) {
+seekBar.addEventListener('mousedown', () => {
+    isSeeking = true;
+});
+
+seekBar.addEventListener('mouseup', () => {
+    if (isSeeking && player && canSeek) {
         socket.emit('videoAction', {
             room: roomId,
             action: 'seek',
-            time: Math.round(document.querySelector('#seekBar').value),
-        })
+            time: Math.round(seekBar.value),
+        });
     }
+    isSeeking = false;
+});
 
-    document.addEventListener("mouseup", () => {
-        isSeeking = false;
-    
-    }, { once: true });
-})
-
+// Update playback time
 function updateTimer() {
-    const seek = document.querySelector('#seekBar')
-    const time = document.querySelector('#time')
+    const seek = document.querySelector('#seekBar');
+    const time = document.querySelector('#time');
 
     setInterval(() => {
-        if (player && typeof player.getCurrentTime === 'function') {
-            seek.value = player.getCurrentTime()
+        if (player && typeof player.getCurrentTime === 'function' && !isSeeking) {
+            seek.value = player.getCurrentTime();
             time.textContent =
-                '-' + timeLeft(player.getCurrentTime(), player.getDuration())
+                '-' + timeLeft(player.getCurrentTime(), player.getDuration());
         }
-    }, 500)
+    }, 500);
 }
 
 // Queue container resize

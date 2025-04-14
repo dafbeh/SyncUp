@@ -175,7 +175,8 @@ io.on('connection', (socket) => {
     })
 
     socket.on('videoAction', (data) => {
-        const { room, action, time } = data
+        const { room, action, time, stamp } = data
+        const serverStamp = Date.now()
         const state = roomStates[room]
 
         if(roomStates[room].isLocked && roomLeader[room] !== socket.id) {
