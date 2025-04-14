@@ -135,23 +135,7 @@ function connectToRoom(room) {
     })
 
     // When a video action event is received
-    socket.on('videoAction', ({ action, time, stamp, serverReceived }) => {
-        const clientReceived = Date.now();
-        const senderToServer = serverReceived - stamp;
-        const serverToClient = clientReceived - serverReceived;
-        const totalLatency = clientReceived - stamp;
-    
-        const logData = {
-            action: action,
-            clientSent: stamp,
-            serverReceived,
-            clientReceived,
-            senderToServer,
-            serverToClient,
-            totalLatency
-        };
-
-        socket.emit('logLatency', logData);
+    socket.on('videoAction', ({ action, time }) => {
 
         switch (action) {
             case 'play':

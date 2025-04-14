@@ -80,13 +80,11 @@ seekBar.addEventListener('mouseup', () => {
             room: roomId,
             action: 'seek',
             time: Math.round(seekBar.value),
-            stamp: Date.now(),
         });
     }
     isSeeking = false;
 });
 
-// Update playback time
 function updateTimer() {
     const seek = document.querySelector('#seekBar');
     const time = document.querySelector('#time');

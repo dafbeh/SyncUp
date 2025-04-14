@@ -6,13 +6,6 @@ const io = require('socket.io')(server)
 const path = require('path')
 const { v4: uuidv4 } = require('uuid')
 
-// Create log file for testing
-const fs = require('fs');
-const logFile2 = path.join(__dirname, 'log2.csv');
-if (!fs.existsSync(logFile2)) {
-    fs.writeFileSync(logFile2, 'Action,Client Sent,Server Received,Client Received,Sender to Server (ms),Server to Client (ms),Total Latency (ms)\n');
-}
-
 const PORT = process.env.PORT || 3000
 
 // Store the information about the rooms
@@ -181,25 +174,8 @@ io.on('connection', (socket) => {
         }
     })
 
-    socket.on('logLatency', (row) => {
-        const values = [
-            row.action,
-            row.clientSent,
-            row.serverReceived,
-            row.clientReceived,
-            row.senderToServer,
-            row.serverToClient,
-            row.totalLatency
-        ];
-        fs.appendFile(logFile2, values.join(',') + '\n', err => {
-            if (err) console.error('Error writing to log file:', err);
-        });
-    });
-
     socket.on('videoAction', (data) => {
-        const serverReceived = Date.now();
-        const { room, action, time, stamp } = data
-        console.log(stamp - serverReceived)
+        const { room, action, time } = data
         const state = roomStates[room]
 
         if(roomStates[room].isLocked && roomLeader[room] !== socket.id) {
@@ -228,7 +204,7 @@ io.on('connection', (socket) => {
                     state.lastEvent = Date.now()
                     break
             }
-            io.to(room).emit('videoAction', { action, time, stamp, serverReceived })
+            io.to(room).emit('videoAction', { action, time })
         }
     })
 
