@@ -10,7 +10,7 @@ const { v4: uuidv4 } = require('uuid')
 const fs = require('fs');
 const logFile2 = path.join(__dirname, 'log2.csv');
 if (!fs.existsSync(logFile2)) {
-    fs.writeFileSync(logFile2, 'Ping,Action,Client Sent,Server Received,Client Received,Sender to Server (ms),Server to Client (ms),Total Latency (ms)\n');
+    fs.writeFileSync(logFile2, 'Action,Client Sent,Server Received,Client Received,Sender to Server (ms),Server to Client (ms),Total Latency (ms)\n');
 }
 
 const PORT = process.env.PORT || 3000
@@ -183,7 +183,6 @@ io.on('connection', (socket) => {
 
     socket.on('logLatency', (row) => {
         const values = [
-            row.ping,
             row.action,
             row.clientSent,
             row.serverReceived,
@@ -198,10 +197,10 @@ io.on('connection', (socket) => {
     });
 
     socket.on('videoAction', (data) => {
-        const { room, action, time, stamp } = data
-        const state = roomStates[room]
-
         const serverReceived = Date.now();
+        const { room, action, time, stamp } = data
+        console.log(stamp - serverReceived)
+        const state = roomStates[room]
 
         if(roomStates[room].isLocked && roomLeader[room] !== socket.id) {
             return;
@@ -229,8 +228,7 @@ io.on('connection', (socket) => {
                     state.lastEvent = Date.now()
                     break
             }
-            let ping = Date.now() - stamp
-            io.to(room).emit('videoAction', { action, time, stamp, serverReceived, ping })
+            io.to(room).emit('videoAction', { action, time, stamp, serverReceived })
         }
     })
 
