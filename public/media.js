@@ -40,11 +40,13 @@ document.querySelector('#play').onclick = function () {
                 });
             } else {
                 if(canSeek) {
+                    stamp = Date.now()
                     console.log('Video paused, emitting pause event')
                     socket.emit('videoAction', {
                         room: roomId,
                         action: 'pause',
                         time: player.getCurrentTime(),
+                        stamp: stamp,
                     })
                 } else {
                     player.pauseVideo()
@@ -54,11 +56,13 @@ document.querySelector('#play').onclick = function () {
             if(playerState === YT.PlayerState.PLAYING) {
                 player.pauseVideo()
             } else {
+                stamp = Date.now()
                 console.log('Video playing, emitting play event')
                 socket.emit('videoAction', {
                     room: roomId,
                     action: 'play',
                     time: player.getCurrentTime(),
+                    stamp: stamp,
                 })
             }
         }
@@ -74,10 +78,12 @@ seekBar.addEventListener('mousedown', () => {
 
 seekBar.addEventListener('mouseup', () => {
     if (isSeeking && player && canSeek) {
+        stamp = Date.now()
         socket.emit('videoAction', {
             room: roomId,
             action: 'seek',
             time: Math.round(seekBar.value),
+            stamp: stamp,
         });
     }
     isSeeking = false;

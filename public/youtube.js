@@ -10,6 +10,8 @@ let localState = []
 let queue = []
 let autoPlayBlocked = false
 
+let stamp;
+
 // On page load
 document.addEventListener('DOMContentLoaded', () => {
     roomId = window.location.pathname.split('/')[1]
@@ -135,7 +137,25 @@ function connectToRoom(room) {
     })
 
     // When a video action event is received
-    socket.on('videoAction', ({ action, time }) => {
+    socket.on('videoAction', ({ action, time, stamp, serverReceived, ping }) => {
+        const clientReceived = Date.now();
+        const senderToServer = serverReceived - stamp;
+        const serverToClient = clientReceived - serverReceived;
+        const totalLatency = clientReceived - stamp;
+    
+        const logData = {
+            ping: ping,
+            action: action,
+            clientSent: stamp,
+            serverReceived,
+            clientReceived,
+            senderToServer,
+            serverToClient,
+            totalLatency
+        };
+
+        socket.emit('logLatency', logData);
+
         switch (action) {
             case 'play':
                 if (player && player.playVideo) {
