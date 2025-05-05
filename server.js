@@ -337,6 +337,7 @@ io.on('connection', (socket) => {
     
         let int = 0;
         let displayName = newName.trim();
+
         function recursiveNewName() {
             if (roomUserList[roomId].some(user => user.name.toLowerCase() === displayName.toLowerCase())) {
                 int++;
@@ -355,7 +356,7 @@ io.on('connection', (socket) => {
             if (roomUserList[roomId].find(user => user.id === socket.id)) {
                 user.name = displayName;
                 socket.emit('changedName', { newName: displayName, isNew });
-    
+            
                 if (!isNew) {
                     io.to(roomId).emit('newNameMessage', { oldName, newName: displayName, isNew });
                 }

@@ -10,7 +10,6 @@ let localState = []
 let queue = []
 let autoPlayBlocked = false
 
-// On page load
 document.addEventListener('DOMContentLoaded', () => {
     roomId = window.location.pathname.split('/')[1]
 
@@ -33,7 +32,6 @@ function generateIdentify() {
     socket.emit('cookie', ({ roomId, identifier }))
 }
 
-// Connect to the WebSocket server
 function connectToRoom(room) {
     if (socket) {
         return
@@ -44,25 +42,27 @@ function connectToRoom(room) {
         console.log('Connected to WebSocket server for room: ' + room)
 
         socket.emit('joinRoom', room)
-        userName = socket.id
+        userName = socket.id;
         updateTimer()
         syncing();
 
         if(document.cookie) {
+            console.log("cookie found")
             const value = `; ${document.cookie}`;
             const parts = value.split(`; identifier=`);
             if (parts.length === 2) {
                 let cookie = parts.pop().split(';').shift();
                 identifier = cookie;
                 console.log(identifier)
-                socket.emit('cookie', ({ roomId, identifier }))
             }
             const value2 = `; ${document.cookie}`;
             const parts2 = value2.split(`; username=`);
             if (parts2.length === 2) {
                 let cookieName = parts2.pop().split(';').shift();
-                let socketId = socket.id
+                let socketId = socket.id;
                 socket.emit('newName', { roomId, oldName: socketId, newName: cookieName, isNew: true })
+            } else {
+                socket.emit('joinMessage', room, userName)
             }
         } else {
             socket.emit('joinMessage', room, userName)
@@ -126,7 +126,6 @@ function connectToRoom(room) {
         })
     })
 
-    // Catch URL from server
     socket.on('videoUrl', (url) => {
         canSeek = false
         loadedVideoUrl = url
@@ -134,7 +133,6 @@ function connectToRoom(room) {
         embedYoutube(url)
     })
 
-    // When a video action event is received
     socket.on('videoAction', ({ action, time }) => {
 
         switch (action) {
@@ -242,7 +240,7 @@ function connectToRoom(room) {
                 ` + message + `
             </p>
         </div>`;
-        messageBox.scrollTop = messageBox.scrollHeight; // Set box to bottom
+        messageBox.scrollTop = messageBox.scrollHeight;
     })
 
     socket.on('whoLeft', (name, count) => {
@@ -270,7 +268,6 @@ function connectToRoom(room) {
     initializeSearch()
 }
 
-// Get URL from the search bar and create an iframe
 function initializeSearch() {
     const searchForm = document.querySelector('#searchForm')
 
@@ -308,7 +305,6 @@ function handleQueue(url) {
     }
 }
 
-// Embed the YouTube video in the iframe
 function embedYoutube(textboxValue) {
     const existingIframe = document.querySelector('#iframe iframe')
     const videoTitle = document.querySelector('#videoTitleText')
@@ -333,7 +329,6 @@ function embedYoutube(textboxValue) {
     iframe.style.pointerEvents = 'none'
     document.querySelector('#iframe').appendChild(iframe)
 
-    // Initialize the YouTube Player
     player = new YT.Player(iframe, {
         events: {
             onReady: function (event) {
@@ -345,7 +340,6 @@ function embedYoutube(textboxValue) {
 
                 player.setVolume( document.querySelector('#volumeR').value);
 
-                // Set video to play / pause
                 if(roomId) {
                     if(localState[roomId].isPlaying) {
                         player.playVideo()
@@ -353,9 +347,7 @@ function embedYoutube(textboxValue) {
                         player.pauseVideo()
                     }
 
-                    // If its first time joining then mute (avoid autopause)
                     if(justJoined) {
-                        // Seek to video play time
                         getSyncInfo(roomId, (state) => {
                             const seekTime = state.videoTime
                             console.log("justJoined, seeking to: " + seekTime)
@@ -379,9 +371,7 @@ function embedYoutube(textboxValue) {
     })
 }
 
-// YouTube player state change
 function onPlayerStateChange(event) {
-    // Global Media keys
     if (event.data == YT.PlayerState.PLAYING) {
         document
             .querySelector('#playSvg')
@@ -451,7 +441,6 @@ function isYTLink(url) {
     return regexPattern.test(url)
 }
 
-// Convert the YouTube URL to an ID
 function convertUrl(oldUrl) {
     const regex =
         /(?:https?:\/\/(?:www\.)?(?:youtube\.com\/(?:[^\/]+\/.+\/|\S+\/v\/|\S*?[?&]v=)|youtu\.be\/))([a-zA-Z0-9_-]{11})(?:[^\w\d\s-]|$)/
@@ -462,7 +451,6 @@ function convertUrl(oldUrl) {
     return null
 }
 
-// Add thumbnail
 function createThumbnail(data) {
     const id = data.id
     const url = data.url
@@ -498,7 +486,6 @@ function createThumbnail(data) {
         container.appendChild(thumbnail);
     };
 
-    // Create and append thumbnails for both containers
     const queueContainer = document.querySelector('#queuePc');
     const mQueueContainer = document.querySelector('#queueM');
     createThumbnailElement(queueContainer);
