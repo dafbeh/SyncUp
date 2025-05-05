@@ -13,7 +13,7 @@
         <div class="sm:absolute sm:top-0 sm:right-0 bg-[#0f0f0f] justify-center w-full p-2">
             <div id="codeBar"
                 class="flex items-center bg-gray-100 0 p-2
-                    sm:w-[100px] w-full rounded-lg shadow-lg transition-all duration-300 
+                    sm:w-[100px] w-52 mx-auto sm:mx-0 rounded-lg shadow-lg transition-all duration-300 
                     ease-in-out sm:focus-within:w-[200px]">
                 <form onsubmit="return false;" id="codeForm" class="flex items-center justify-between w-full" autocomplete="off">
                     <input type="text" id="codeText"
@@ -29,9 +29,9 @@
             </div>
 
             <div id="rightSide" class="mx-auto my-auto sm:ml-32 flex flex-col justify-center items-center">
-                <h1 class="text-white font-bold font-sans sm:text-9xl text-8xl">SyncUp</h1>
+                <h1 class="text-white font-bold font-sans sm:text-9xl text-8xl overflow-visible">SyncUp</h1>
                 <div class="w-full flex items-center justify-center"> 
-                    <button class="z-2 sm:w-full w-screen h-28 mt-12 shadow-lg bg-white sm:rounded-lg font-bold font-sans text-xl hover:bg-gray-300 flex items-center justify-center text-center box-border" 
+                    <button class="z-2 sm:w-full w-1/2 h-16 sm:h-28 mt-12 shadow-lg bg-white rounded-lg font-bold font-sans text-xl hover:bg-gray-300 flex items-center justify-center text-center box-border" 
                             onclick="window.location.href='/new-room'">
                         Create Room
                     </button>
@@ -39,7 +39,7 @@
             </div>
         </div>
 
-        <div id="downArrow" class="sticky overflow-hidden z-1 flex justify-center">
+        <div id="downArrow" class="invisible sm:visible overflow-hidden z-1 flex justify-center">
             <img id="arrow" alt="arrow" class="w-32 h-32 invert cursor-pointer" 
                 onClick="window.scrollTo({left:0, top:document.body.scrollHeight, behavior:'smooth'})" 
                 src="images/arrow.svg" draggable="false">
